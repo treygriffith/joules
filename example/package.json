@@ -1,0 +1,8 @@
+{
+	"name": "Example",
+	"version":"0.0.1",
+	"dependencies": {
+		"connect": "*"
+	},
+	"main": "server.js"
+}

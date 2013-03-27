@@ -17,7 +17,7 @@
 			})({
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
-						throw new Error("Module Not Found");
+						throw new Error('Module Not Found');
 					}
 					var childModule = dependencies[name](this);
 					this.children.push(childModule);

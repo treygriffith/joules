@@ -1,0 +1,6 @@
+{
+	"dependencies" : {
+		"monkeys": "./monkeys.js"
+	},
+	"main" : "index.js"
+}

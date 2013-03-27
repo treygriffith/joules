@@ -36,7 +36,7 @@ Using script tags with body text set to file text is bad:
 
 
 TO DO:
-[ ] Make Script wrapping stand-alone with defined source and dependencies
+[x] Make Script wrapping stand-alone with defined source and dependencies
 [ ] Make script wrapping capable on the browser
 [ ] Decide how to deal with dependencies (parsing or declaring)
 [ ] append scripts to the document at run-time

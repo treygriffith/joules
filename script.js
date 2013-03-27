@@ -1,9 +1,9 @@
-var fs = require('fs'),
-	util = require('util'),
-	events = require('events'),
-	cacheWrap = fs.readFileSync('./wrappers/cache-wrap.js', 'utf8'),
-	dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
-	globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8');
+if(typeof browserBuild === 'undefined') {
+	var fs = require('fs'),
+		cacheWrap = fs.readFileSync('./wrappers/cache-wrap.js', 'utf8'),
+		dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
+		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8');
+}
 
 
 // Need a way to make all dependencies of a top level script available on window.require;
@@ -18,8 +18,6 @@ function Script(dependencies, id, name, source) {
 
 	return this;
 }
-
-util.inherits(Script, events.EventEmitter);
 
 Script.prototype.write = function(cache) {
 	var script = this;
@@ -69,4 +67,6 @@ Script.prototype.globalWrap = function() {
 			.replace(/{{cache}}/g, this.cache);
 };
 
-module.exports = Script;
+if(typeof browserBuild === 'undefined') {
+	module.exports = Script;
+}

@@ -1,11 +1,19 @@
-<script src="browser.js"></script>
-<script>
-	require.ready(function() {
-		var hello = require('./js/hello');
-		hello();
+<body>
+	<h1 id="title">Test Title</h1>
 
-		require('./js/world');
+	<script src="browser.js"></script>
+	<script>
+		require.ready(function() {
+			var hello = require('./js/hello');
+			hello();
 
-		console.log(require('./js/value'));
-	});
-</script>
+			require('./js/world');
+		});
+	</script>
+	<script>
+		require.ready(function() {
+			
+			document.getElementById("title").textContent = require('./js/value').my;
+		});
+	</script>
+</body>

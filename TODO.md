@@ -30,7 +30,7 @@ TO DO:
 [x] create build process for deployment
 [x] parse dependencies
 [ ] add source mapping
-[ ] make modules more adhering to Node.js standard
+[ ] make modules more adherent to Node.js standard
 
 
 RequireJS's statements:

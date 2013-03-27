@@ -11,6 +11,8 @@ window.require.ready = function(fn) {
 	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
 
 	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
+		if(err) throw err;
+		
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
@@ -190,7 +192,48 @@ if(typeof browserBuild === 'undefined') {
 	stat,
 	resolve,
 	join,
-	normalize;
+	normalize,
+	coreModules = [
+		"assert",
+		"buffer_ieee754",
+		"buffer",
+		"child_process",
+		"cluster",
+		"console",
+		"constants",
+		"crypto",
+		"_debugger",
+		"dgram",
+		"dns",
+		"domain",
+		"events",
+		"freelist",
+		"fs",
+		"http",
+		"https",
+		"_linklist",
+		"module",
+		"net",
+		"os",
+		"path",
+		"punycode",
+		"querystring",
+		"readline",
+		"repl",
+		"stream",
+		"string_decoder",
+		"sys",
+		"timers",
+		"tls",
+		"tty",
+		"url",
+		"util",
+		"vm",
+		"zlib"
+	],
+	isCore = function(name) {
+		return !!~coreModules.indexOf(name);
+	};
 
 if(typeof browserBuild === 'undefined') {
 	readFile = require('fs').readFile;
@@ -327,7 +370,7 @@ if(typeof browserBuild === 'undefined') {
 		});
 	};
 
-	//shim for path.resolve
+	//shim for path functions
 	resolve = function(from, to) {
 		var resolvedPath = '',
 			resolvedAbsolute = false;
@@ -391,53 +434,35 @@ if(typeof browserBuild === 'undefined') {
 	// (so also no leading and trailing slashes - it does not distinguish
 	// relative and absolute paths)
 	function normalizeArray(parts, allowAboveRoot) {
-	// if the path tries to go above the root, `up` ends up > 0
-	var up = 0;
-	for (var i = parts.length - 1; i >= 0; i--) {
-		var last = parts[i];
-		if (last === '.') {
-			parts.splice(i, 1);
-		} else if (last === '..') {
-			parts.splice(i, 1);
-			up++;
-		} else if (up) {
-			parts.splice(i, 1);
-			up--;
+		// if the path tries to go above the root, `up` ends up > 0
+		var up = 0;
+		for (var i = parts.length - 1; i >= 0; i--) {
+			var last = parts[i];
+			if (last === '.') {
+				parts.splice(i, 1);
+			} else if (last === '..') {
+				parts.splice(i, 1);
+				up++;
+			} else if (up) {
+				parts.splice(i, 1);
+				up--;
+			}
 		}
-	}
 
-	// if the path is allowed to go above the root, restore leading ..s
-	if (allowAboveRoot) {
-		for (; up--; up) {
-			parts.unshift('..');
+		// if the path is allowed to go above the root, restore leading ..s
+		if (allowAboveRoot) {
+			for (; up--; up) {
+				parts.unshift('..');
+			}
 		}
-	}
 
-	return parts;
+		return parts;
 	}
 
 }
 
+// core should be key/value pairs of the name of the module and it's location. This is tricky for the browser side. Do we deliver all of the core modules into browser.js?
 var core = {};
-/*
-// Node and core modules logic from node-browser-resolve
-
-// core modules replaced by their browser capable counterparts
-var core = {};
-
-// load core modules from builtin dir
-fs.readdirSync(__dirname + '/builtin/').forEach(function(file) {
-    core[path.basename(file, '.js')] = path.join(__dirname, '/builtin/', file);
-});
-
-// manually add core which are provided by modules
-core['http'] = require.resolve('http-browserify');
-core['vm'] = require.resolve('vm-browserify');
-core['crypto'] = require.resolve('crypto-browserify');
-core['console'] = require.resolve('console-browserify');
-core['zlib'] = require.resolve('zlib-browserify');
-core['buffer'] = require.resolve('buffer-browserify');
-*/
 
 // given a path, create an array of node_module paths for it
 // borrowed from substack/resolve
@@ -482,6 +507,11 @@ function loadFile(name, location, callback, html) {
 		dependencies.forEach(function(dep_location) {
 
 			loadModule(location, dep_location, function(err, dependency) {
+				if(err) {
+					callback(err);
+					callback = function() {};
+					return;
+				}
 				loadedDependencies.push(dependency);
 
 				if(dependencies.length === loadedDependencies.length) {
@@ -678,9 +708,14 @@ function loadModule(location, name, callback, raw) {
 		load(resolve(location, name), name, callback);
 		
 	} else {
-		if(core[name]) {
-			throw new Error("core modules not implemented");
+		if(isCore(name)) {
 			// core module
+			if(core[name]) {
+				readFile(core[name], 'utf8', loadJs(name, name, callback));
+				return;
+			}
+			throw new Error("Core Module: "+name+ " is not implemented.");
+			
 		} else {
 			// node_modules
 			// http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders

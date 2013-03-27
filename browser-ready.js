@@ -11,6 +11,8 @@ window.require.ready = function(fn) {
 	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
 
 	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
+		if(err) throw err;
+		
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';

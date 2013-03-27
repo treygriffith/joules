@@ -10,7 +10,7 @@ var fs = require('fs'),
 loadModule('./' + location, null, function(err, module) {
 	if(err) throw err;
 
-	fs.writeFile(path.resolve(location, output_filename), ready + module.write(), 'utf8', function(err) {
+	fs.writeFile(path.resolve(location, output_filename), ready + module.write(null, true) + module.invoke(), 'utf8', function(err) {
 		if(err) throw err;
 
 		console.log("done writing to "+output_filename);

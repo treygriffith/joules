@@ -8,29 +8,23 @@ window.require.fire = function(evt) {
 			fn.call(window);
 		});
 	}
+	if(evt === 'ready') {
+		this.ready = function(fn) {
+			fn.call(window);
+		};
+	}
 };
 
 window.require.ready = function(fn) {
-	/*
 	this._events.ready = this._events.ready || [];
-	this._events.ready.push(fn);*/
-
-	var whole = fn.toString();
-	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
-
-	loadModule(body, null, function(err, module) {
-		var script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.text = module.write();
-		window.document.body.appendChild(script);
-	}, true);
+	this._events.ready.push(fn);
 };(function(dependency_cache) {
 	var cache = {},
 		dependencies = {};
 
-	var _require = window.require;
+	var _require = require;
 
-	window.require = function(name) {
+	require = function(name) {
 		var module;
 
 		if(typeof dependencies[name] !== 'function') {
@@ -44,9 +38,9 @@ window.require.ready = function(fn) {
 		return module.exports;
 	};
 
-	window.require._events = _require._events,
-	window.require.fire = _require.fire,
-	window.require.ready = _require.ready;
+	require._events = _require._events,
+	require.fire = _require.fire,
+	require.ready = _require.ready;
 
 
 	(function(modules) {
@@ -184,5 +178,4 @@ console.log(monkeys.names);
 }
 
 });
-
 window.require.fire('ready');

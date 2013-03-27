@@ -53,6 +53,13 @@ window.require.ready = function(fn) {
 })(dependencies);(function(modules) {
 	var dependencies = {};
 
+	
+
+	modules['./js/value'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value'](cache, dependencies);
+
+})(dependencies);(function(modules) {
+	var dependencies = {};
+
 	(function(modules) {
 	var dependencies = {};
 
@@ -104,6 +111,40 @@ window.require.ready = function(fn) {
 			});
 		}
 		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'];
+	};
+},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value' : function(cache, dependencies) {
+	return function(parent) {
+		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value']) {
+			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value'] = (function(module) {
+				var dependencies = undefined, cache = undefined, parent = undefined;
+
+				(function(module, require, exports) {
+
+					module.exports = JSON.parse('{ 	"my": "Value" }');
+
+				})(module, function() {
+					return module.require.apply(module, Array.prototype.slice.call(arguments));
+				}, module.exports);
+
+				module.loaded = true;
+				return module;
+			})({
+				require: function(name, assignment) {
+					if(typeof dependencies[name] !== 'function') {
+						throw new Error('Module Not Found');
+					}
+					var childModule = dependencies[name](this);
+					this.children.push(childModule);
+					return childModule.exports;
+				},
+				exports: {},
+				id:'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value',
+				loaded:false,
+				children: [],
+				parent: parent
+			});
+		}
+		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/value'];
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys' : function(cache, dependencies) {
 	return function(parent) {

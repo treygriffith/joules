@@ -211,16 +211,12 @@ function loadFile(name, location, callback, html) {
 				callback(null, new Script(loadedDependencies, resolve(location), name, !!html ? null : contents));
 			};
 
-		console.log(dependencies);
-
 		if(!dependencies.length) {
 			done();
 			return;
 		}
 
 		dependencies.forEach(function(dep_location) {
-
-			console.log("dependency resolved to " + resolve(location, dep_location));
 
 			loadModule(resolve(location, dep_location), dep_location, function(err, dependency) {
 				loadedDependencies.push(dependency);
@@ -244,13 +240,11 @@ function loadHtml(name, location, callback) {
 }
 
 function loadDir(name, location, callback) {
-	console.log(location);
+
 	// look for a package.json
 	exists(resolve(location, 'package.json'), function(file_exists) {
 		if(file_exists) {
 			// parse json to find main
-			// 
-			console.log(resolve(location, 'package.json') + " found, reading");
 			
 			readFile(resolve(location, 'package.json'), 'utf8', function(err, raw) {
 				if(err) {
@@ -271,8 +265,6 @@ function loadDir(name, location, callback) {
 					callback(new Error("Package.json must have 'main' defined"));
 					return;
 				}
-
-				console.log("loading main at "+resolve(location, manifest.main));
 
 				// load the main file
 				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback));
@@ -296,10 +288,8 @@ function loadDir(name, location, callback) {
 					return;
 				}
 
-				// No module found
-				// build a Script that throws an error
-				console.log("no module found, building a time bomb");
-				callback(null, new Script([], resolve(location), name, 'throw new Error("Module Not Found");'));
+				// No module found - throw this error at build time, not runtime
+				throw new Error("Module Not Found: "+location);
 			});
 		});
 	});	
@@ -346,8 +336,6 @@ function loadModule(location, name, callback, raw) {
 		exists(location, function(file_exists) {
 			if(file_exists) {
 
-				console.log(location + " exists!");
-
 				// determine if this is a directory
 				stat(location, function(err, stats) {
 					if(err) {
@@ -356,7 +344,6 @@ function loadModule(location, name, callback, raw) {
 					}
 
 					if(stats.isDirectory()) {
-						console.log(location + "is a directory");
 						// this is a directory, so we treat it like one
 						loadDir(name, location, callback);
 						return;
@@ -383,7 +370,7 @@ function loadModule(location, name, callback, raw) {
 				exists(location + '.json', function(file_exists) {
 					if(file_exists) {
 						// .json appended, parse as json
-						readFile(location + '.json', function(err, contents) {
+						readFile(location + '.json', 'utf8', function(err, contents) {
 							if(err) {
 								callback(err);
 								return;
@@ -412,7 +399,6 @@ function loadModule(location, name, callback, raw) {
 		});
 	} else {
 		// this is a core module or node_module
-		console.log("core module "+location);
 		throw new Error("core modules not implemented");
 	}
 }

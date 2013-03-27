@@ -2,7 +2,9 @@ if(typeof browserBuild === 'undefined') {
 	var fs = require('fs'),
 		cacheWrap = fs.readFileSync('./wrappers/cache-wrap.js', 'utf8'),
 		dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
-		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8');
+		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8'),
+		rootWrap = fs.readFileSync('./wrappers/root-wrap.js', 'utf8'),
+		invoke = fs.readFileSync('./wrappers/invoke.js', 'utf8');
 }
 
 
@@ -19,7 +21,7 @@ function Script(dependencies, id, name, source) {
 	return this;
 }
 
-Script.prototype.write = function(cache) {
+Script.prototype.write = function(cache, root) {
 	var script = this;
 
 	this.dependenciesSource = "";
@@ -27,14 +29,23 @@ Script.prototype.write = function(cache) {
 		script.dependenciesSource += dependency.write(cache || script.cache);
 	});
 
-	if(!this.source) {
-		// writing as a top-level script
+	if(root) {
+		// writing as root script
+		if(this.source) {
+			this.addToCache(cache);
+			this.dependenciesSource += this.rootWrap();
+		}
 		return this.globalWrap();
-	} else {
-		// writing as a dependency
-		this.addToCache(cache);
-		return this.wrap();
 	}
+
+	// writing as a dependency
+	this.addToCache(cache);
+	return this.wrap();
+};
+
+Script.prototype.invoke = function() {
+	return invoke
+			.replace(/{{name}}/g, this.name);
 };
 
 Script.prototype.addToCache = function(cache) {
@@ -59,6 +70,12 @@ Script.prototype.wrap = function() {
 			.replace(/{{id}}/g, this.id)
 			.replace(/{{name}}/g, this.name)
 			.replace(/{{dependencies}}/g, this.dependenciesSource);
+};
+
+Script.prototype.rootWrap = function() {
+	return rootWrap
+			.replace(/{{id}}/g, this.id)
+			.replace(/{{name}}/g, this.name);
 };
 
 Script.prototype.globalWrap = function() {

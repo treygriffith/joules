@@ -11,8 +11,19 @@ window.require.fire = function(evt) {
 };
 
 window.require.ready = function(fn) {
+	/*
 	this._events.ready = this._events.ready || [];
-	this._events.ready.push(fn);
+	this._events.ready.push(fn);*/
+
+	var whole = fn.toString();
+	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
+
+	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.text = module.write(null, true) + module.invoke();
+		window.document.body.appendChild(script);
+	}, true);
 };var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "	return function(parent) {\n" +
 "		if(!cache['{{id}}']) {\n" +
@@ -78,9 +89,7 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "\n" +
 "	window.require._events = _require._events,\n" +
 "	window.require.fire = _require.fire,\n" +
-"	window.require.ready = function(fn) {\n" +
-"		fn.call(window);\n" +
-"	};\n" +
+"	window.require.ready = _require.ready;\n" +
 "\n" +
 "\n" +
 "	{{dependencies}}\n" +
@@ -91,14 +100,18 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "	{{cache}}\n" +
 "\n" +
 "});\n" +
-"\n" +
+"";
+var rootWrap = "dependencies['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);";
+var invoke = "window.require('{{name}}');\n" +
 "window.require.fire('ready');";
 var browserBuild = true;
 if(typeof browserBuild === 'undefined') {
 	var fs = require('fs'),
 		cacheWrap = fs.readFileSync('./wrappers/cache-wrap.js', 'utf8'),
 		dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
-		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8');
+		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8'),
+		rootWrap = fs.readFileSync('./wrappers/root-wrap.js', 'utf8'),
+		invoke = fs.readFileSync('./wrappers/invoke.js', 'utf8');
 }
 
 
@@ -115,7 +128,7 @@ function Script(dependencies, id, name, source) {
 	return this;
 }
 
-Script.prototype.write = function(cache) {
+Script.prototype.write = function(cache, root) {
 	var script = this;
 
 	this.dependenciesSource = "";
@@ -123,14 +136,23 @@ Script.prototype.write = function(cache) {
 		script.dependenciesSource += dependency.write(cache || script.cache);
 	});
 
-	if(!this.source) {
-		// writing as a top-level script
+	if(root) {
+		// writing as root script
+		if(this.source) {
+			this.addToCache(cache);
+			this.dependenciesSource += this.rootWrap();
+		}
 		return this.globalWrap();
-	} else {
-		// writing as a dependency
-		this.addToCache(cache);
-		return this.wrap();
 	}
+
+	// writing as a dependency
+	this.addToCache(cache);
+	return this.wrap();
+};
+
+Script.prototype.invoke = function() {
+	return invoke
+			.replace(/{{name}}/g, this.name);
 };
 
 Script.prototype.addToCache = function(cache) {
@@ -157,6 +179,12 @@ Script.prototype.wrap = function() {
 			.replace(/{{dependencies}}/g, this.dependenciesSource);
 };
 
+Script.prototype.rootWrap = function() {
+	return rootWrap
+			.replace(/{{id}}/g, this.id)
+			.replace(/{{name}}/g, this.name);
+};
+
 Script.prototype.globalWrap = function() {
 	return globalWrap
 			.replace(/{{dependencies}}/g, this.dependenciesSource)
@@ -168,11 +196,13 @@ if(typeof browserBuild === 'undefined') {
 }var manifest_filename = "index.json",
 	readFile,
 	exists,
+	stat,
 	resolve;
 
 if(typeof browserBuild === 'undefined') {
 	readFile = require('fs').readFile;
 	exists = require('fs').exists;
+	stat = require('fs').stat;
 	resolve = require('path').resolve;
 	var Script = require('./script');
 } else {
@@ -208,7 +238,7 @@ if(typeof browserBuild === 'undefined') {
 			var href = window.location.pathname;
 			href = href.split('/');
 			href.pop();
-			return href.join('/');
+			return href.join('/') || '/';
 		}
 	};
 
@@ -269,20 +299,50 @@ if(typeof browserBuild === 'undefined') {
 			callback(false);
 		});
 	};
+	stat = function(path, callback) {
+		exists(path, function(exist) {
+			if(!exist) {
+				callback(new Error("File does not exist"));
+			}
+			callback(null, {
+				isFile: function() {
+					return true;
+				},
+				isDirectory: function() {
+					return false;
+				},
+				isBlockDevice: function() {
+					return false;
+				},
+				isCharacterDevice: function() {
+					return false;
+				},
+				isSymbolicLink: function() {
+					return false;
+				},
+				isFIFO: function() {
+					return false;
+				},
+				isSocket: function() {
+					return false;
+				}
+			});
+		});
+	};
 
 	//shim for path.resolve
 	resolve = function(from, to) {
 		var resolvedPath = '',
-		    resolvedAbsolute = false;
+			resolvedAbsolute = false;
 
 		for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
 			var path = (i >= 0) ? arguments[i] : process.cwd();
 
-		  // Skip empty and invalid entries
+			// Skip empty and invalid entries
 			if (typeof path !== 'string') {
-		    	throw new TypeError('Arguments to path.resolve must be strings');
+				throw new TypeError('Arguments to path.resolve must be strings');
 			} else if (!path) {
-		    continue;
+				continue;
 			}
 
 			resolvedPath = path + '/' + resolvedPath;
@@ -332,109 +392,226 @@ if(typeof browserBuild === 'undefined') {
 
 }
 
-function loadModule(location, name, callback) {
+function loadFile(name, location, callback, html) {
 
-	exists(resolve(location, manifest_filename), function(does_exist) {
+	return function(err, contents) {
+		if(err) {
+			callback(err);
+			return;
+		}
 
-		if(does_exist) {
-			readFile(resolve(location, manifest_filename), 'utf8', function(err, raw) {
-				var manifest,
-					dependencies = [],
-					dependencies_count = 0,
-					main,
-					loaded = {
-						deps: false,
-						main: false
-					},
-					allLoaded = function() {
-						return loaded.deps && loaded.main;
-					},
-					done = function() {
-						callback(null, new Script(dependencies, resolve(location), name, main));
-					};
+		var dependencies = findDependencies(contents, html),
+			loadedDependencies = [],
+			done = function() {
+				callback(null, new Script(loadedDependencies, resolve(location), name, !!html ? null : contents));
+			};
 
-				if(err) throw err;
+		console.log(dependencies);
+
+		if(!dependencies.length) {
+			done();
+			return;
+		}
+
+		dependencies.forEach(function(dep_location) {
+
+			console.log("dependency resolved to " + resolve(location, dep_location));
+
+			loadModule(resolve(location, dep_location), dep_location, function(err, dependency) {
+				loadedDependencies.push(dependency);
+
+				if(dependencies.length === loadedDependencies.length) {
+					// done loading dependencies
+					done();
+				}
+			});
+		});
+
+	};	
+}
+
+function loadJs(name, location, callback) {
+	return loadFile(name, location, callback, false);
+}
+
+function loadHtml(name, location, callback) {
+	return loadFile(name, location, callback, true);
+}
+
+function loadDir(name, location, callback) {
+	console.log(location);
+	// look for a package.json
+	exists(resolve(location, 'package.json'), function(file_exists) {
+		if(file_exists) {
+			// parse json to find main
+			// 
+			console.log(resolve(location, 'package.json') + " found, reading");
+			
+			readFile(resolve(location, 'package.json'), 'utf8', function(err, raw) {
+				if(err) {
+					callback(err);
+					return;
+				}
+
+				var manifest = {};
 
 				try {
 					manifest = JSON.parse(raw);
 				} catch(e) {
-					throw e;
+					callback(e);
+					return;
 				}
 
-				if(manifest.dependencies) {
-					for(var p in manifest.dependencies) {
-						dependencies_count++;
-					}
-
-
-					for(var dep_name in manifest.dependencies) {
-						var dep_location = manifest.dependencies[dep_name],
-							dep_id = resolve(location, dep_location);
-
-						loadModule(dep_id, dep_name, function(err, dependency) {
-							dependencies.push(dependency);
-
-							if(dependencies.length === dependencies_count) {
-								// done loading dependencies
-								loaded.deps = true;
-								if(allLoaded()) {
-									done();
-								}
-							}
-						});
-
-					}				
-				} else {
-					loaded.deps = true;
-					if(allLoaded()) {
-						done();
-					}
+				if(!manifest.main) {
+					callback(new Error("Package.json must have 'main' defined"));
+					return;
 				}
 
-				if(manifest.main) {
-					readFile(resolve(location, manifest.main), 'utf8', function(err, contents) {
-						if(err) throw err;
+				console.log("loading main at "+resolve(location, manifest.main));
 
-						main = contents;
-
-						loaded.main = true;
-						if(allLoaded()) {
-							done();
-						}
-					});
-				} else {
-					loaded.main = true;
-					if(allLoaded()) {
-						done();
-					}
-				}
-
-			});
-		} else {
-			exists(resolve(location), function(file_exists) {
-				if(file_exists) {
-					readFile(resolve(location), 'utf8', function(err, contents) {
-						if(err) throw err;
-
-						callback(null, new Script([], resolve(location), name, contents));
-					});	
-				} else {
-					throw new Error("Module does not exist");
-				}
+				// load the main file
+				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback));
 			});
 
+			return;
 		}
 
-	});
+		// look for an index.js file
+		exists(resolve(location, 'index.js'), function(file_exists) {
+			if(file_exists) {
+				// index.js is our entry point
+				readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback));
+				return;
+			}
+
+			// look for an index.html file
+			exists(resolve(location, 'index.html'), function(file_exists) {
+				if(file_exists) {
+					readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback));
+					return;
+				}
+
+				// No module found
+				// build a Script that throws an error
+				console.log("no module found, building a time bomb");
+				callback(null, new Script([], resolve(location), name, 'throw new Error("Module Not Found");'));
+			});
+		});
+	});	
+}
+
+
+function findDependencies(string, html) {
+	var matches = [],
+		scripts = [],
+		match,
+		scriptRE = /<script(.|\s)*?>([\s\S]*?)<\/script>/g,
+		requireRE = /require\(('|")(.*?)('|")\)/g;
+
+	// if the html flag is set, only look in <script> tags
+	if(html) {
+		// retrieve all the script bodies
+		while((match = scriptRE.exec(string)) !== null) {
+			scripts.push(match[2]);
+		}
+		// concatenate them so we can search for requires
+		string = scripts.join("\n");
+	}
+
+	// this doesn't actually make sure that the quotes are the same on both sides, just that it is quoted somehow
+	while((match = requireRE.exec(string)) !== null) {
+		matches.push(match[2]);
+	}
+
+	return matches;
+}
+
+// raw flag signifies that location is actually the raw contents of the entrypoint file
+function loadModule(location, name, callback, raw) {
+
+	if(raw) {
+		loadJs(name, './', callback)(null, location);
+		return;
+	}
+
+	location = resolve(location);
+
+	if(location[0] === '.' || location[0] === '/') {
+		// this is a file
+		exists(location, function(file_exists) {
+			if(file_exists) {
+
+				console.log(location + " exists!");
+
+				// determine if this is a directory
+				stat(location, function(err, stats) {
+					if(err) {
+						callback(err);
+						return;
+					}
+
+					if(stats.isDirectory()) {
+						console.log(location + "is a directory");
+						// this is a directory, so we treat it like one
+						loadDir(name, location, callback);
+						return;
+					}
+
+					if(!stats.isFile()) {
+						throw new Error("Module is not a file or a directory");
+					}
+
+					// exact filename exists, parse as javascript
+					readFile(location, 'utf8', loadJs(name, location, callback));
+				});
+				
+				return;
+			}
+
+			exists(location + '.js', function(file_exists) {
+				if(file_exists) {
+					// .js appended, parse as javascript
+					readFile(location + '.js', 'utf8', loadJs(name, location, callback));
+					return;
+				}
+
+				exists(location + '.json', function(file_exists) {
+					if(file_exists) {
+						// .json appended, parse as json
+						readFile(location + '.json', function(err, contents) {
+							if(err) {
+								callback(err);
+								return;
+							}
+							// export the parsed JSON in the browser
+							callback(null, new Script([], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
+						});
+						
+						return;
+					}
+
+					// check if it is html
+					exists(location + '.html', function(file_exists) {
+						if(file_exists) {
+							readFile(location + '.html', loadHtml(name, location, callback));
+
+							return;
+						}
+					});
+
+					// treat this as a directory
+					loadDir(name, location, callback);
+
+				});
+			});
+		});
+	} else {
+		// this is a core module or node_module
+		console.log("core module "+location);
+		throw new Error("core modules not implemented");
+	}
 }
 
 if(typeof browserBuild === 'undefined') {
 	module.exports = loadModule;
-}
-loadModule('./', null, function(err, module) {
-	var script = document.createElement('script');
-	script.type = 'text/javascript';
-	script.text = module.write();
-	console.log(script);
-	document.body.appendChild(script);
-});})();
+}})();

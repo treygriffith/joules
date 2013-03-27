@@ -11,8 +11,19 @@ window.require.fire = function(evt) {
 };
 
 window.require.ready = function(fn) {
+	/*
 	this._events.ready = this._events.ready || [];
-	this._events.ready.push(fn);
+	this._events.ready.push(fn);*/
+
+	var whole = fn.toString();
+	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
+
+	loadModule(body, null, function(err, module) {
+		var script = document.createElement('script');
+		script.type = 'text/javascript';
+		script.text = module.write();
+		window.document.body.appendChild(script);
+	}, true);
 };(function(dependency_cache) {
 	var cache = {},
 		dependencies = {};
@@ -35,9 +46,7 @@ window.require.ready = function(fn) {
 
 	window.require._events = _require._events,
 	window.require.fire = _require.fire,
-	window.require.ready = function(fn) {
-		fn.call(window);
-	};
+	window.require.ready = _require.ready;
 
 
 	(function(modules) {
@@ -45,7 +54,7 @@ window.require.ready = function(fn) {
 
 	
 
-	modules['hello'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/hello.js'](cache, dependencies);
+	modules['./js/hello'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'](cache, dependencies);
 
 })(dependencies);(function(modules) {
 	var dependencies = {};
@@ -55,21 +64,21 @@ window.require.ready = function(fn) {
 
 	
 
-	modules['monkeys'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js'](cache, dependencies);
+	modules['./monkeys'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys'](cache, dependencies);
 
 })(dependencies);
 
-	modules['world'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/world'](cache, dependencies);
+	modules['./js/world'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world'](cache, dependencies);
 
 })(dependencies);
 
 
 })({
 
-	'/Users/treygriffith/Dropbox/Node/jewels/example/hello.js' : function(cache, dependencies) {
+	'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello' : function(cache, dependencies) {
 	return function(parent) {
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/hello.js']) {
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/hello.js'] = (function(module) {
+		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']) {
+			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'] = (function(module) {
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
 				(function(module, require, exports) {
@@ -94,18 +103,18 @@ window.require.ready = function(fn) {
 					return childModule.exports;
 				},
 				exports: {},
-				id:'/Users/treygriffith/Dropbox/Node/jewels/example/hello.js',
+				id:'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello',
 				loaded:false,
 				children: [],
 				parent: parent
 			});
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/hello.js'];
+		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'];
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys' : function(cache, dependencies) {
 	return function(parent) {
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js']) {
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js'] = (function(module) {
+		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys']) {
+			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys'] = (function(module) {
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
 				(function(module, require, exports) {
@@ -128,23 +137,23 @@ window.require.ready = function(fn) {
 					return childModule.exports;
 				},
 				exports: {},
-				id:'/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js',
+				id:'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys',
 				loaded:false,
 				children: [],
 				parent: parent
 			});
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/world/monkeys.js'];
+		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world/monkeys'];
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/world' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world' : function(cache, dependencies) {
 	return function(parent) {
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/world']) {
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/world'] = (function(module) {
+		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world']) {
+			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world'] = (function(module) {
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
 				(function(module, require, exports) {
 
-					var monkeys = require('monkeys');
+					var monkeys = require('./monkeys');
 
 console.log(monkeys.names);
 
@@ -164,13 +173,13 @@ console.log(monkeys.names);
 					return childModule.exports;
 				},
 				exports: {},
-				id:'/Users/treygriffith/Dropbox/Node/jewels/example/world',
+				id:'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world',
 				loaded:false,
 				children: [],
 				parent: parent
 			});
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/world'];
+		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/world'];
 	};
 }
 

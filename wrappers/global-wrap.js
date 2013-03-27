@@ -20,9 +20,7 @@
 
 	window.require._events = _require._events,
 	window.require.fire = _require.fire,
-	window.require.ready = function(fn) {
-		fn.call(window);
-	};
+	window.require.ready = _require.ready;
 
 
 	{{dependencies}}
@@ -33,5 +31,3 @@
 	{{cache}}
 
 });
-
-window.require.fire('ready');

@@ -1,19 +1,6 @@
 <body>
 	<h1 id="title">Test Title</h1>
 
-	<script src="browser.js"></script>
-	<script>
-		require.ready(function() {
-			var hello = require('./js/hello');
-			hello();
-
-			require('./js/world');
-		});
-	</script>
-	<script>
-		require.ready(function() {
-			
-			document.getElementById("title").textContent = require('./js/value').my;
-		});
-	</script>
+	<!--<script src="browser.js" data-main="js/main.js"></script>-->
+	<script src="js/bundle.js"></script>
 </body>

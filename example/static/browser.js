@@ -1,4 +1,30 @@
-(function() {window.require = function() {
+(function() {// load the data-main script
+
+var loadMain = function(main) {
+	if(main) {
+		if(typeof loadModule !== 'function') {
+			window.setTimeout(function() {
+				loadMain(main);
+			}, 10);
+			return;
+		}
+		loadModule('./', './'+main, function(err, module) {
+			if(err) throw err;
+
+			var script = document.createElement('script');
+			script.type = 'text/javascript';
+			script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
+			window.document.body.appendChild(script);		
+		});
+	}	
+};
+
+var scripts = window.document.getElementsByTagName("script");
+var script = scripts[scripts.length - 1];
+loadMain(script.getAttribute('data-main'));
+
+
+window.require = function() {
 	throw new Error("Can't call require outside of require.ready");
 };
 
@@ -12,7 +38,7 @@ window.require.ready = function(fn) {
 
 	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
 		if(err) throw err;
-		
+
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
 		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
@@ -67,6 +93,9 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "\n" +
 "	var _require = require;\n" +
 "\n" +
+"	// require is intentionally not scoped\n" +
+"	// in the browser-build, it falls onto the sandbox's declared require\n" +
+"	// in the bundled build, it falls all the way to window.require\n" +
 "	require = function(name) {\n" +
 "		var module;\n" +
 "\n" +
@@ -192,6 +221,7 @@ if(typeof browserBuild === 'undefined') {
 	stat,
 	resolve,
 	join,
+	sep,
 	normalize,
 	coreModules = [
 		"assert",
@@ -241,6 +271,7 @@ if(typeof browserBuild === 'undefined') {
 	stat = require('fs').stat;
 	resolve = require('path').resolve;
 	join = require('path').join;
+	sep = require('path').sep;
 	normalize = require('path').normalize;
 	var Script = require('./script');
 } else {
@@ -410,6 +441,8 @@ if(typeof browserBuild === 'undefined') {
 		}).join('/'));
 	};
 
+	sep = '/';
+
 	normalize = function(path) {
 		var isAbsolute = path.charAt(0) === '/',
 			trailingSlash = path.substr(-1) === '/';
@@ -485,7 +518,7 @@ function nodeModulesPaths (start) {
     return dirs;
 }
 
-function loadFile(name, location, callback, html) {
+function loadFile(name, location, callback, isDirectory, isHtml) {
 
 	return function(err, contents) {
 		if(err) {
@@ -493,10 +526,10 @@ function loadFile(name, location, callback, html) {
 			return;
 		}
 
-		var dependencies = findDependencies(contents, html),
+		var dependencies = findDependencies(contents, isHtml),
 			loadedDependencies = [],
 			done = function() {
-				callback(null, new Script(loadedDependencies, resolve(location), name, !!html ? null : contents));
+				callback(null, new Script(loadedDependencies, resolve(location), name, !!isHtml ? null : contents));
 			};
 
 		if(!dependencies.length) {
@@ -505,8 +538,16 @@ function loadFile(name, location, callback, html) {
 		}
 
 		dependencies.forEach(function(dep_location) {
+			var dir, locations;
+			if(isDirectory) {
+				dir = location;
+			} else {
+				locations = location.split(sep);
+				locations.pop();
+				dir = locations.join(sep);
+			}
 
-			loadModule(location, dep_location, function(err, dependency) {
+			loadModule(dir, dep_location, function(err, dependency) {
 				if(err) {
 					callback(err);
 					callback = function() {};
@@ -524,12 +565,12 @@ function loadFile(name, location, callback, html) {
 	};	
 }
 
-function loadJs(name, location, callback) {
-	return loadFile(name, location, callback, false);
+function loadJs(name, location, callback, isDirectory) {
+	return loadFile(name, location, callback, isDirectory, false);
 }
 
-function loadHtml(name, location, callback) {
-	return loadFile(name, location, callback, true);
+function loadHtml(name, location, callback, isDirectory) {
+	return loadFile(name, location, callback, isDirectory, true);
 }
 
 function loadDir(name, location, callback) {
@@ -560,7 +601,7 @@ function loadDir(name, location, callback) {
 				}
 
 				// load the main file
-				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback));
+				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback, true));
 			});
 
 			return;
@@ -571,14 +612,14 @@ function loadDir(name, location, callback) {
 		exists(resolve(location, 'index'), function(file_exists) {
 			if(file_exists) {
 				// index is our entry point
-				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback));
+				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback, true));
 				return;
 			}
 
 			exists(resolve(location, 'index.js'), function(file_exists) {
 				if(file_exists) {
 					// index.js is our entry point
-					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback));
+					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback, true));
 					return;
 				}
 
@@ -587,7 +628,7 @@ function loadDir(name, location, callback) {
 				// parameter so that other templates can be searched (e.g. .jade, .erb)
 				exists(resolve(location, 'index.html'), function(file_exists) {
 					if(file_exists) {
-						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback));
+						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback, true));
 						return;
 					}
 
@@ -669,7 +710,7 @@ function load(location, name, callback) {
 }
 
 
-function findDependencies(string, html) {
+function findDependencies(string, isHtml) {
 	var matches = [],
 		scripts = [],
 		match,
@@ -677,7 +718,7 @@ function findDependencies(string, html) {
 		requireRE = /require\(('|")(.*?)('|")\)/g;
 
 	// if the html flag is set, only look in <script> tags
-	if(html) {
+	if(isHtml) {
 		// retrieve all the script bodies
 		while((match = scriptRE.exec(string)) !== null) {
 			scripts.push(match[2]);
@@ -695,7 +736,7 @@ function findDependencies(string, html) {
 }
 
 // raw flag signifies that location is actually the raw contents of the entrypoint file
-function loadModule(location, name, callback, raw) {
+var loadModule = function(location, name, callback, raw) {
 
 	if(raw) {
 		loadJs(name, './', callback)(null, location);

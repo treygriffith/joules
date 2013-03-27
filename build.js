@@ -10,10 +10,23 @@ var fs = require('fs'),
 loadModule('./' + location, './', function(err, module) {
 	if(err) throw err;
 
-	fs.writeFile(path.resolve(location, output_filename), ready + module.write(null, true) + module.invoke(), 'utf8', function(err) {
+	fs.stat('./' + location, function(err, stats) {
 		if(err) throw err;
+		var writeTo;
 
-		console.log("done writing to "+output_filename);
-	});	
+		if(stats.isDirectory()) {
+			writeTo = path.resolve(location, output_filename);
+		} else {
+			var locations = location.split(path.sep);
+			locations.pop();
+			writeTo = path.resolve('./', locations.join(path.sep), output_filename);
+		}
+
+		fs.writeFile(writeTo, ready + module.write(null, true) + module.invoke(), 'utf8', function(err) {
+			if(err) throw err;
+
+			console.log("done writing to "+writeTo);
+		});	
+	});
 });
 

@@ -4,6 +4,9 @@
 
 	var _require = require;
 
+	// require is intentionally not scoped
+	// in the browser-build, it falls onto the sandbox's declared require
+	// in the bundled build, it falls all the way to window.require
 	require = function(name) {
 		var module;
 

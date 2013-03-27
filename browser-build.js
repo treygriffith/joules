@@ -8,10 +8,10 @@ var fs = require('fs'),
 	dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
 	globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8'),
 	rootWrap = fs.readFileSync('./wrappers/root-wrap.js', 'utf8'),
-	invoke = fs.readFileSync('./wrappers/invoke.js', 'utf8'),
+	invoke = fs.readFileSync('./wrappers/browser-invoke.js', 'utf8'),
 	scriptJs = fs.readFileSync('./script.js', 'utf8'),
 	loadModuleJs = fs.readFileSync('./loadModule.js', 'utf8'),
-	readyJs = fs.readFileSync('./ready.js', 'utf8');
+	readyJs = fs.readFileSync('./browser-ready.js', 'utf8');
 
 
 var cacheWrapWrite = 'var cacheWrap = "' + utils.replaceLineBreaks(cacheWrap) + '";\n',

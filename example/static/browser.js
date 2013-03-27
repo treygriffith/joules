@@ -1,19 +1,9 @@
 (function() {window.require = function() {};
 
-window.require._events = {};
-
 window.require.fire = function(evt) {
-	if(this._events[evt] && this._events[evt].length) {
-		this._events[evt].forEach(function(fn) {
-			fn.call(window);
-		});
-	}
 };
 
 window.require.ready = function(fn) {
-	/*
-	this._events.ready = this._events.ready || [];
-	this._events.ready.push(fn);*/
 
 	var whole = fn.toString();
 	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
@@ -21,7 +11,7 @@ window.require.ready = function(fn) {
 	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
-		script.text = module.write(null, true) + module.invoke();
+		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
 		window.document.body.appendChild(script);
 	}, true);
 };var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
@@ -71,9 +61,9 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "	var cache = {},\n" +
 "		dependencies = {};\n" +
 "\n" +
-"	var _require = window.require;\n" +
+"	var _require = require;\n" +
 "\n" +
-"	window.require = function(name) {\n" +
+"	require = function(name) {\n" +
 "		var module;\n" +
 "\n" +
 "		if(typeof dependencies[name] !== 'function') {\n" +
@@ -87,9 +77,9 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "		return module.exports;\n" +
 "	};\n" +
 "\n" +
-"	window.require._events = _require._events,\n" +
-"	window.require.fire = _require.fire,\n" +
-"	window.require.ready = _require.ready;\n" +
+"	require._events = _require._events,\n" +
+"	require.fire = _require.fire,\n" +
+"	require.ready = _require.ready;\n" +
 "\n" +
 "\n" +
 "	{{dependencies}}\n" +
@@ -102,8 +92,7 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "});\n" +
 "";
 var rootWrap = "dependencies['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);";
-var invoke = "window.require('{{name}}');\n" +
-"window.require.fire('ready');";
+var invoke = "require('{{name}}');";
 var browserBuild = true;
 if(typeof browserBuild === 'undefined') {
 	var fs = require('fs'),
@@ -111,7 +100,7 @@ if(typeof browserBuild === 'undefined') {
 		dependenciesWrap = fs.readFileSync('./wrappers/dependencies-wrap.js', 'utf8'),
 		globalWrap = fs.readFileSync('./wrappers/global-wrap.js', 'utf8'),
 		rootWrap = fs.readFileSync('./wrappers/root-wrap.js', 'utf8'),
-		invoke = fs.readFileSync('./wrappers/invoke.js', 'utf8');
+		invoke = fs.readFileSync('./wrappers/build-invoke.js', 'utf8');
 }
 
 

@@ -2,9 +2,9 @@
 	var cache = {},
 		dependencies = {};
 
-	var _require = window.require;
+	var _require = require;
 
-	window.require = function(name) {
+	require = function(name) {
 		var module;
 
 		if(typeof dependencies[name] !== 'function') {
@@ -18,9 +18,9 @@
 		return module.exports;
 	};
 
-	window.require._events = _require._events,
-	window.require.fire = _require.fire,
-	window.require.ready = _require.ready;
+	require._events = _require._events,
+	require.fire = _require.fire,
+	require.ready = _require.ready;
 
 
 	{{dependencies}}

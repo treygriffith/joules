@@ -1,2 +1,3 @@
-
-document.getElementById("title").textContent = require('./hello');
+var $ = require('jquery');
+$("#title").text(require('./hello'));
+$("#content").text(require('./content'));

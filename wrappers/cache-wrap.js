@@ -25,6 +25,7 @@
 				},
 				exports: {},
 				id:'{{id}}',
+				filename: '{{id}}',
 				loaded:false,
 				children: [],
 				parent: parent

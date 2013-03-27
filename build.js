@@ -7,7 +7,7 @@ var fs = require('fs'),
 	loadModule = require('./loadModule'),
 	ready = fs.readFileSync('./build-ready.js', 'utf8');
 
-loadModule('./' + location, null, function(err, module) {
+loadModule('./' + location, './', function(err, module) {
 	if(err) throw err;
 
 	fs.writeFile(path.resolve(location, output_filename), ready + module.write(null, true) + module.invoke(), 'utf8', function(err) {

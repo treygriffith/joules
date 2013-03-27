@@ -28,7 +28,7 @@ TO DO:
 [x] Decide how to deal with dependencies (parsing or declaring)
 [x] append scripts to the document at run-time
 [x] create build process for deployment
-[ ] parse dependencies
+[x] parse dependencies
 [ ] add source mapping
 [ ] make modules more adhering to Node.js standard
 

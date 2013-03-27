@@ -1,4 +1,6 @@
-window.require = function() {};
+window.require = function() {
+	throw new Error("Can't call require outside of require.ready");
+};
 
 window.require.fire = function(evt) {
 };

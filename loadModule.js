@@ -2,13 +2,17 @@ var manifest_filename = "index.json",
 	readFile,
 	exists,
 	stat,
-	resolve;
+	resolve,
+	join,
+	normalize;
 
 if(typeof browserBuild === 'undefined') {
 	readFile = require('fs').readFile;
 	exists = require('fs').exists;
 	stat = require('fs').stat;
 	resolve = require('path').resolve;
+	join = require('path').join;
+	normalize = require('path').normalize;
 	var Script = require('./script');
 } else {
 	// Shim for array filter
@@ -37,14 +41,16 @@ if(typeof browserBuild === 'undefined') {
 		};
 	}
 
-	// shim for process.cwd()
-	var process = {
+	// shim for process
+	// platform is linux because all we use it for is determining file hierarchy, which is posix
+	process = {
 		cwd: function() {
 			var href = window.location.pathname;
 			href = href.split('/');
 			href.pop();
 			return href.join('/') || '/';
-		}
+		},
+		platform: 'linux'
 	};
 
 	// xhr
@@ -165,6 +171,35 @@ if(typeof browserBuild === 'undefined') {
 		return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '';
 	};
 
+	join = function() {
+		var paths = Array.prototype.slice.call(arguments, 0);
+		return normalize(paths.filter(function(p, index) {
+		if (typeof p !== 'string') {
+		throw new TypeError('Arguments to path.join must be strings');
+		}
+		return p;
+		}).join('/'));
+	};
+
+	normalize = function(path) {
+		var isAbsolute = path.charAt(0) === '/',
+			trailingSlash = path.substr(-1) === '/';
+
+		// Normalize the path
+		path = normalizeArray(path.split('/').filter(function(p) {
+			return !!p;
+		}), !isAbsolute).join('/');
+
+		if (!path && !isAbsolute) {
+			path = '.';
+		}
+		if (path && trailingSlash) {
+			path += '/';
+		}
+
+		return (isAbsolute ? '/' : '') + path;
+	};
+
 	// resolves . and .. elements in a path array with directory names there
 	// must be no slashes, empty elements, or device names (c:\) in the array
 	// (so also no leading and trailing slashes - it does not distinguish
@@ -197,6 +232,48 @@ if(typeof browserBuild === 'undefined') {
 
 }
 
+var core = {};
+/*
+// Node and core modules logic from node-browser-resolve
+
+// core modules replaced by their browser capable counterparts
+var core = {};
+
+// load core modules from builtin dir
+fs.readdirSync(__dirname + '/builtin/').forEach(function(file) {
+    core[path.basename(file, '.js')] = path.join(__dirname, '/builtin/', file);
+});
+
+// manually add core which are provided by modules
+core['http'] = require.resolve('http-browserify');
+core['vm'] = require.resolve('vm-browserify');
+core['crypto'] = require.resolve('crypto-browserify');
+core['console'] = require.resolve('console-browserify');
+core['zlib'] = require.resolve('zlib-browserify');
+core['buffer'] = require.resolve('buffer-browserify');
+*/
+
+// given a path, create an array of node_module paths for it
+// borrowed from substack/resolve
+function nodeModulesPaths (start) {
+    var splitRe = process.platform === 'win32' ? /[\/\\]/ : /\/+/;
+    var parts = start.split(splitRe);
+
+    var dirs = [];
+    for (var i = parts.length - 1; i >= 0; i--) {
+        if (parts[i] === 'node_modules') continue;
+        var dir = join(
+            join.apply(this, parts.slice(0, i + 1)),
+            'node_modules'
+        );
+        if (!parts[0].match(/([A-Za-z]:)/)) {
+            dir = '/' + dir;
+        }
+        dirs.push(dir);
+    }
+    return dirs;
+}
+
 function loadFile(name, location, callback, html) {
 
 	return function(err, contents) {
@@ -218,7 +295,7 @@ function loadFile(name, location, callback, html) {
 
 		dependencies.forEach(function(dep_location) {
 
-			loadModule(resolve(location, dep_location), dep_location, function(err, dependency) {
+			loadModule(location, dep_location, function(err, dependency) {
 				loadedDependencies.push(dependency);
 
 				if(dependencies.length === loadedDependencies.length) {
@@ -273,26 +350,106 @@ function loadDir(name, location, callback) {
 			return;
 		}
 
-		// look for an index.js file
-		exists(resolve(location, 'index.js'), function(file_exists) {
+		// look for an index file
+		
+		exists(resolve(location, 'index'), function(file_exists) {
 			if(file_exists) {
-				// index.js is our entry point
-				readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback));
+				// index is our entry point
+				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback));
 				return;
 			}
 
-			// look for an index.html file
-			exists(resolve(location, 'index.html'), function(file_exists) {
+			exists(resolve(location, 'index.js'), function(file_exists) {
 				if(file_exists) {
-					readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback));
+					// index.js is our entry point
+					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback));
 					return;
 				}
 
-				// No module found - throw this error at build time, not runtime
-				throw new Error("Module Not Found: "+location);
+				// look for an index.html file
+				// NOTE: the .html extension is hardcoded in now, but it probably makes sense to make this a
+				// parameter so that other templates can be searched (e.g. .jade, .erb)
+				exists(resolve(location, 'index.html'), function(file_exists) {
+					if(file_exists) {
+						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback));
+						return;
+					}
+
+					// No module found - throw this error at build time, not runtime
+					callback(new Error("Module Not Found: "+location));
+				});
 			});
 		});
 	});	
+}
+
+function load(location, name, callback) {
+	exists(location, function(file_exists) {
+		if(file_exists) {
+
+			// determine if this is a directory
+			stat(location, function(err, stats) {
+				if(err) {
+					callback(err);
+					return;
+				}
+
+				if(stats.isDirectory()) {
+					// this is a directory, so we treat it like one
+					loadDir(name, location, callback);
+					return;
+				}
+
+				if(!stats.isFile()) {
+					throw new Error("Module is not a file or a directory");
+				}
+
+				// exact filename exists, parse as javascript
+				readFile(location, 'utf8', loadJs(name, location, callback));
+			});
+			
+			return;
+		}
+
+		exists(location + '.js', function(file_exists) {
+			if(file_exists) {
+				// .js appended, parse as javascript
+				readFile(location + '.js', 'utf8', loadJs(name, location, callback));
+				return;
+			}
+
+			exists(location + '.json', function(file_exists) {
+				if(file_exists) {
+					// .json appended, parse as json
+					readFile(location + '.json', 'utf8', function(err, contents) {
+						if(err) {
+							callback(err);
+							return;
+						}
+						// export the parsed JSON in the browser
+						callback(null, new Script([], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
+					});
+					
+					return;
+				}
+
+				// check if it is html
+				// NOTE: the .html extension is hardcoded in now, but it probably makes sense to make this a
+				// parameter so that other templates can be searched (e.g. .jade, .erb)
+				exists(location + '.html', function(file_exists) {
+					if(file_exists) {
+						readFile(location + '.html', loadHtml(name, location, callback));
+
+						return;
+					}
+				});
+
+				// treat this as a directory
+				loadDir(name, location, callback);
+
+			});
+		});
+	});
 }
 
 
@@ -329,77 +486,42 @@ function loadModule(location, name, callback, raw) {
 		return;
 	}
 
-	location = resolve(location);
 
-	if(location[0] === '.' || location[0] === '/') {
+	if(name[0] === '.' || name[0] === '/') {
 		// this is a file
-		exists(location, function(file_exists) {
-			if(file_exists) {
+		load(resolve(location, name), name, callback);
+		
+	} else {
+		if(core[name]) {
+			throw new Error("core modules not implemented");
+			// core module
+		} else {
+			// node_modules
+			// http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders
+			var paths = nodeModulesPaths(resolve(location));
+			var i = 0;
 
-				// determine if this is a directory
-				stat(location, function(err, stats) {
+			var tryLoad = function(i) {
+				if(!paths[i]) {
+					callback(new Error("Module Not Found: "+name));
+					return;
+				}
+				load(resolve(paths[i],name), name, function(err, module) {
 					if(err) {
+						if(err.message.substring(0, "Module Not Found: ".length) === "Module Not Found: ") {
+							i++;
+							tryLoad(i);
+							return;
+						}
 						callback(err);
 						return;
 					}
+					callback(null, module);
+				});	
+			};
 
-					if(stats.isDirectory()) {
-						// this is a directory, so we treat it like one
-						loadDir(name, location, callback);
-						return;
-					}
-
-					if(!stats.isFile()) {
-						throw new Error("Module is not a file or a directory");
-					}
-
-					// exact filename exists, parse as javascript
-					readFile(location, 'utf8', loadJs(name, location, callback));
-				});
-				
-				return;
-			}
-
-			exists(location + '.js', function(file_exists) {
-				if(file_exists) {
-					// .js appended, parse as javascript
-					readFile(location + '.js', 'utf8', loadJs(name, location, callback));
-					return;
-				}
-
-				exists(location + '.json', function(file_exists) {
-					if(file_exists) {
-						// .json appended, parse as json
-						readFile(location + '.json', 'utf8', function(err, contents) {
-							if(err) {
-								callback(err);
-								return;
-							}
-							// export the parsed JSON in the browser
-							callback(null, new Script([], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
-						});
-						
-						return;
-					}
-
-					// check if it is html
-					exists(location + '.html', function(file_exists) {
-						if(file_exists) {
-							readFile(location + '.html', loadHtml(name, location, callback));
-
-							return;
-						}
-					});
-
-					// treat this as a directory
-					loadDir(name, location, callback);
-
-				});
-			});
-		});
-	} else {
-		// this is a core module or node_module
-		throw new Error("core modules not implemented");
+			tryLoad(i);
+		}
 	}
 }
 

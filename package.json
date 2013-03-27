@@ -1,0 +1,6 @@
+{
+	"name": "jewels",
+	"dependencies": {
+	},
+	"main": "index.js"
+}

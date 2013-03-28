@@ -44,37 +44,73 @@ window.require.ready = function(fn) {
 		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
 		window.document.body.appendChild(script);
 	}, true);
-};var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
+};
+var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "	return function(parent) {\n" +
+"		var found = [];\n" +
+"		var walkForId = function(module, stopId) {\n" +
+"			if(stopId && module.id === stopId) {\n" +
+"				return module;\n" +
+"			} else if(!stopId) {\n" +
+"				stopId = module.id;\n" +
+"			}\n" +
+"			if(~found.indexOf(module.id)) {\n" +
+"				return false;\n" +
+"			}\n" +
+"			found.push(module.id);\n" +
+"			for(var i=0;i<module.children.length;i++) {\n" +
+"				var ret = walkForId(module.children[i], stopId);\n" +
+"				if(ret) {\n" +
+"					return ret;\n" +
+"				}\n" +
+"			}\n" +
+"			return false;\n" +
+"		};\n" +
+"\n" +
 "		if(!cache['{{id}}']) {\n" +
+"\n" +
+"			cache['{{id}}'] = {\n" +
+"				require: function(name, assignment) {\n" +
+"					if(typeof dependencies[name] !== 'function') {\n" +
+"						throw new Error('Module Not Found');\n" +
+"					}\n" +
+"\n" +
+"					// make sure we're not infinitely looping\n" +
+"					if(walkForId(this)) {\n" +
+"						return cache['{{id}}'].exports;\n" +
+"					}\n" +
+"\n" +
+"					var childModule = dependencies[name](this);\n" +
+"					this.children.push(childModule);\n" +
+"					return childModule.exports;\n" +
+"				},\n" +
+"				exports: {},\n" +
+"				id: '{{id}}',\n" +
+"				filename: '{{filename}}',\n" +
+"				loaded: false,\n" +
+"				children: [],\n" +
+"				parent: parent\n" +
+"			};\n" +
+"\n" +
 "			cache['{{id}}'] = (function(module) {\n" +
+"\n" +
 "				var dependencies = undefined, cache = undefined, parent = undefined;\n" +
+"\n" +
 "\n" +
 "				(function(module, require, exports) {\n" +
 "\n" +
 "					{{source}}\n" +
 "\n" +
 "				})(module, function() {\n" +
+"\n" +
 "					return module.require.apply(module, Array.prototype.slice.call(arguments));\n" +
+"\n" +
 "				}, module.exports);\n" +
 "\n" +
 "				module.loaded = true;\n" +
 "				return module;\n" +
-"			})({\n" +
-"				require: function(name, assignment) {\n" +
-"					if(typeof dependencies[name] !== 'function') {\n" +
-"						throw new Error('Module Not Found');\n" +
-"					}\n" +
-"					var childModule = dependencies[name](this);\n" +
-"					this.children.push(childModule);\n" +
-"					return childModule.exports;\n" +
-"				},\n" +
-"				exports: {},\n" +
-"				id:'{{id}}',\n" +
-"				loaded:false,\n" +
-"				children: [],\n" +
-"				parent: parent\n" +
-"			});\n" +
+"\n" +
+"			})(cache['{{id}}']);\n" +
 "		}\n" +
 "		return cache['{{id}}'];\n" +
 "	};\n" +
@@ -86,7 +122,8 @@ var dependenciesWrap = "(function(modules) {\n" +
 "\n" +
 "	modules['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);\n" +
 "\n" +
-"})(dependencies);";
+"})(dependencies);\n" +
+"";
 var globalWrap = "(function(dependency_cache) {\n" +
 "	var cache = {},\n" +
 "		dependencies = {};\n" +
@@ -124,7 +161,8 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "\n" +
 "});\n" +
 "";
-var rootWrap = "dependencies['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);";
+var rootWrap = "dependencies['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);\n" +
+"";
 var invoke = "require('{{name}}');";
 var browserBuild = true;
 if(typeof browserBuild === 'undefined') {
@@ -136,11 +174,15 @@ if(typeof browserBuild === 'undefined') {
 		invoke = fs.readFileSync('./wrappers/build-invoke.js', 'utf8');
 }
 
+// cache of written dependencies
+var writeCache = {};
+
 
 // Need a way to make all dependencies of a top level script available on window.require;
 // Top level script therefore does not have a source to be wrapped
 
-function Script(dependencies, id, name, source) {
+function Script(parent, dependencies, id, name, source) {
+	this.parent = parent;
 	this.id = id;
 	this.name = name;
 	this.source = source;
@@ -154,8 +196,14 @@ Script.prototype.write = function(cache, root) {
 	var script = this;
 
 	this.dependenciesSource = "";
+	this.dependenciesFound = this.dependenciesFound || [this.id];
 	this.dependencies.forEach(function(dependency) {
-		script.dependenciesSource += dependency.write(cache || script.cache);
+		if(!~script.dependenciesFound.indexOf(dependency.id)) {
+			script.dependenciesFound.push(dependency.id);
+			script.dependenciesSource += dependency.write(cache || script.cache);
+		} else {
+			script.dependenciesSource += dependency.rootWrap();
+		}
 	});
 
 	if(root) {
@@ -169,7 +217,7 @@ Script.prototype.write = function(cache, root) {
 
 	// writing as a dependency
 	this.addToCache(cache);
-	return this.wrap();
+	return  this.wrap();
 };
 
 Script.prototype.invoke = function() {
@@ -263,7 +311,8 @@ if(typeof browserBuild === 'undefined') {
 	],
 	isCore = function(name) {
 		return !!~coreModules.indexOf(name);
-	};
+	},
+	loadedModules = {};
 
 if(typeof browserBuild === 'undefined') {
 	readFile = require('fs').readFile;
@@ -298,6 +347,18 @@ if(typeof browserBuild === 'undefined') {
 				}
 			}
 			return res;
+		};
+	}
+
+	// shim for object.create
+	if (!Object.create) {
+		Object.create = function (o) {
+			if (arguments.length > 1) {
+				throw new Error('Object.create implementation only accepts the first parameter.');
+			}
+			function F() {}
+			F.prototype = o;
+			return new F();
 		};
 	}
 
@@ -518,7 +579,7 @@ function nodeModulesPaths (start) {
     return dirs;
 }
 
-function loadFile(name, location, callback, isDirectory, isHtml) {
+function loadFile(name, location, callback, parent, isDirectory, isHtml) {
 
 	return function(err, contents) {
 		if(err) {
@@ -527,9 +588,23 @@ function loadFile(name, location, callback, isDirectory, isHtml) {
 		}
 
 		var dependencies = findDependencies(contents, isHtml),
-			loadedDependencies = [],
+			script = new Script(parent, [], resolve(location), name, !!isHtml ? null : contents),
 			done = function() {
-				callback(null, new Script(loadedDependencies, resolve(location), name, !!isHtml ? null : contents));
+				callback(null, script);
+			},
+			dependencyHandler = function(err, dependency) {
+				if(err) {
+					callback(err);
+					callback = function() {};
+					return;
+				}
+
+				script.dependencies.push(dependency);
+
+				if(dependencies.length === script.dependencies.length) {
+					// done loading dependencies
+					done();
+				}
 			};
 
 		if(!dependencies.length) {
@@ -547,33 +622,32 @@ function loadFile(name, location, callback, isDirectory, isHtml) {
 				dir = locations.join(sep);
 			}
 
-			loadModule(dir, dep_location, function(err, dependency) {
-				if(err) {
-					callback(err);
-					callback = function() {};
-					return;
-				}
-				loadedDependencies.push(dependency);
+			// if this script has a dependency identical to itself or it's parent, just add a reference, don't try to load it again
+			if(script.id === resolve(dir, dep_location)) {
+				dependencyHandler(null, script);
+				return;
+			}
 
-				if(dependencies.length === loadedDependencies.length) {
-					// done loading dependencies
-					done();
-				}
-			});
+			if(parent && parent.id === resolve(dir, dep_location)) {
+				dependencyHandler(null, parent);
+				return;
+			}
+
+			loadModule(dir, dep_location, dependencyHandler, false, script);
 		});
 
 	};	
 }
 
-function loadJs(name, location, callback, isDirectory) {
-	return loadFile(name, location, callback, isDirectory, false);
+function loadJs(name, location, callback, parent, isDirectory) {
+	return loadFile(name, location, callback, parent, isDirectory, false);
 }
 
-function loadHtml(name, location, callback, isDirectory) {
-	return loadFile(name, location, callback, isDirectory, true);
+function loadHtml(name, location, callback, parent, isDirectory) {
+	return loadFile(name, location, callback, parent, isDirectory, true);
 }
 
-function loadDir(name, location, callback) {
+function loadDir(name, location, callback, parent) {
 
 	// look for a package.json
 	exists(resolve(location, 'package.json'), function(file_exists) {
@@ -601,7 +675,7 @@ function loadDir(name, location, callback) {
 				}
 
 				// load the main file
-				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback, true));
+				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, location, callback, parent, true));
 			});
 
 			return;
@@ -612,14 +686,14 @@ function loadDir(name, location, callback) {
 		exists(resolve(location, 'index'), function(file_exists) {
 			if(file_exists) {
 				// index is our entry point
-				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback, true));
+				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback, parent, true));
 				return;
 			}
 
 			exists(resolve(location, 'index.js'), function(file_exists) {
 				if(file_exists) {
 					// index.js is our entry point
-					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback, true));
+					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback, parent, true));
 					return;
 				}
 
@@ -628,7 +702,7 @@ function loadDir(name, location, callback) {
 				// parameter so that other templates can be searched (e.g. .jade, .erb)
 				exists(resolve(location, 'index.html'), function(file_exists) {
 					if(file_exists) {
-						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback, true));
+						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback, parent, true));
 						return;
 					}
 
@@ -640,7 +714,23 @@ function loadDir(name, location, callback) {
 	});	
 }
 
-function load(location, name, callback) {
+function load(location, name, _callback, parent) {
+	if(loadedModules[location]) {
+		var module = Object.create(loadedModules[location]);
+		module.name = name;
+		module.parent = parent;
+		_callback(null,  module);
+	}
+
+	var callback = function(err, module) {
+		if(err) {
+			_callback(err);
+			return;
+		}
+		loadedModules[location] = module;
+		_callback(null, module);
+	};
+
 	exists(location, function(file_exists) {
 		if(file_exists) {
 
@@ -653,7 +743,7 @@ function load(location, name, callback) {
 
 				if(stats.isDirectory()) {
 					// this is a directory, so we treat it like one
-					loadDir(name, location, callback);
+					loadDir(name, location, callback, parent);
 					return;
 				}
 
@@ -662,7 +752,7 @@ function load(location, name, callback) {
 				}
 
 				// exact filename exists, parse as javascript
-				readFile(location, 'utf8', loadJs(name, location, callback));
+				readFile(location, 'utf8', loadJs(name, location, callback, parent));
 			});
 			
 			return;
@@ -671,7 +761,7 @@ function load(location, name, callback) {
 		exists(location + '.js', function(file_exists) {
 			if(file_exists) {
 				// .js appended, parse as javascript
-				readFile(location + '.js', 'utf8', loadJs(name, location, callback));
+				readFile(location + '.js', 'utf8', loadJs(name, location, callback, parent));
 				return;
 			}
 
@@ -684,7 +774,7 @@ function load(location, name, callback) {
 							return;
 						}
 						// export the parsed JSON in the browser
-						callback(null, new Script([], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
+						callback(null, new Script(parent, [], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
 					});
 					
 					return;
@@ -695,14 +785,14 @@ function load(location, name, callback) {
 				// parameter so that other templates can be searched (e.g. .jade, .erb)
 				exists(location + '.html', function(file_exists) {
 					if(file_exists) {
-						readFile(location + '.html', loadHtml(name, location, callback));
+						readFile(location + '.html', loadHtml(name, location, callback, parent));
 
 						return;
 					}
 				});
 
 				// treat this as a directory
-				loadDir(name, location, callback);
+				loadDir(name, location, callback, parent);
 
 			});
 		});
@@ -736,23 +826,42 @@ function findDependencies(string, isHtml) {
 }
 
 // raw flag signifies that location is actually the raw contents of the entrypoint file
-var loadModule = function(location, name, callback, raw) {
+var loadModule = function(location, name, callback, raw, parent) {
 
 	if(raw) {
-		loadJs(name, './', callback)(null, location);
+		loadJs(name, './', callback, parent)(null, location);
 		return;
 	}
 
 
 	if(name[0] === '.' || name[0] === '/') {
 		// this is a file
-		load(resolve(location, name), name, callback);
+		load(resolve(location, name), name, function(err, module) {
+			if(err){
+				callback(err);
+				return;
+			}
+			// save the module to the cache
+			loadedModules[resolve(location, name)] = module;
+
+			callback(null, module);
+		}, parent);
 		
 	} else {
 		if(isCore(name)) {
 			// core module
 			if(core[name]) {
-				readFile(core[name], 'utf8', loadJs(name, name, callback));
+				if(loadedModules[name]) {
+					callback(null, loadedModules[name]);
+					return;
+				}
+				readFile(core[name], 'utf8', loadJs(name, name, function(err, module) {
+					if(err) {
+						callback(err);
+						return;
+					}
+					loadedModules[name] = module;
+				}, parent));
 				return;
 			}
 			throw new Error("Core Module: "+name+ " is not implemented.");
@@ -779,13 +888,13 @@ var loadModule = function(location, name, callback, raw) {
 						return;
 					}
 					callback(null, module);
-				});	
+				}, parent);	
 			};
 
 			tryLoad(i);
 		}
 	}
-}
+};
 
 if(typeof browserBuild === 'undefined') {
 	module.exports = loadModule;

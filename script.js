@@ -7,11 +7,15 @@ if(typeof browserBuild === 'undefined') {
 		invoke = fs.readFileSync('./wrappers/build-invoke.js', 'utf8');
 }
 
+// cache of written dependencies
+var writeCache = {};
+
 
 // Need a way to make all dependencies of a top level script available on window.require;
 // Top level script therefore does not have a source to be wrapped
 
-function Script(dependencies, id, name, source) {
+function Script(parent, dependencies, id, name, source) {
+	this.parent = parent;
 	this.id = id;
 	this.name = name;
 	this.source = source;
@@ -25,8 +29,14 @@ Script.prototype.write = function(cache, root) {
 	var script = this;
 
 	this.dependenciesSource = "";
+	this.dependenciesFound = this.dependenciesFound || [this.id];
 	this.dependencies.forEach(function(dependency) {
-		script.dependenciesSource += dependency.write(cache || script.cache);
+		if(!~script.dependenciesFound.indexOf(dependency.id)) {
+			script.dependenciesFound.push(dependency.id);
+			script.dependenciesSource += dependency.write(cache || script.cache);
+		} else {
+			script.dependenciesSource += dependency.rootWrap();
+		}
 	});
 
 	if(root) {
@@ -40,7 +50,7 @@ Script.prototype.write = function(cache, root) {
 
 	// writing as a dependency
 	this.addToCache(cache);
-	return this.wrap();
+	return  this.wrap();
 };
 
 Script.prototype.invoke = function() {

@@ -1,6 +1,7 @@
 // load the data-main script
 
 var loadMain = function(main) {
+	var location = './';
 	if(main) {
 		if(typeof loadModule !== 'function') {
 			window.setTimeout(function() {
@@ -8,7 +9,14 @@ var loadMain = function(main) {
 			}, 10);
 			return;
 		}
-		loadModule('./', './'+main, function(err, module) {
+
+		if(main[0] !== '.' && main[0] !== '/') {
+			main = './'+main;
+		}
+		if(main[0] === '/') {
+			location = '/';
+		}
+		loadModule(location, main, function(err, module) {
 			if(err) throw err;
 
 			var script = document.createElement('script');

@@ -8,17 +8,12 @@
 	// in the browser-build, it falls onto the sandbox's declared require
 	// in the bundled build, it falls all the way to window.require
 	require = function(name) {
-		var module;
 
 		if(typeof dependencies[name] !== 'function') {
 			throw new Error('Module Not Found');
 		}
 
-		module = dependencies[name](this);
-
-		module.parent = this;
-
-		return module.exports;
+		return dependencies[name](this).exports;
 	};
 
 	require._events = _require._events,

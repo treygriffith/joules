@@ -47,37 +47,17 @@ window.require.ready = function(fn) {
 };
 var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "	return function(parent) {\n" +
-"		var found = [];\n" +
-"		var walkForId = function(module, stopId) {\n" +
-"			if(stopId && module.id === stopId) {\n" +
-"				return module;\n" +
-"			} else if(!stopId) {\n" +
-"				stopId = module.id;\n" +
-"			}\n" +
-"			if(~found.indexOf(module.id)) {\n" +
-"				return false;\n" +
-"			}\n" +
-"			found.push(module.id);\n" +
-"			for(var i=0;i<module.children.length;i++) {\n" +
-"				var ret = walkForId(module.children[i], stopId);\n" +
-"				if(ret) {\n" +
-"					return ret;\n" +
-"				}\n" +
-"			}\n" +
-"			return false;\n" +
-"		};\n" +
 "\n" +
-"		if(!cache['{{id}}']) {\n" +
+"		var id = '{{id}}';\n" +
 "\n" +
-"			cache['{{id}}'] = {\n" +
-"				require: function(name, assignment) {\n" +
+"		if(!cache[id]) {\n" +
+"\n" +
+"			// instantiate the module before executing it's code.\n" +
+"			// this prevents infinite loops on circular dependencies\n" +
+"			cache[id] = {\n" +
+"				require: function(name) {\n" +
 "					if(typeof dependencies[name] !== 'function') {\n" +
 "						throw new Error('Module Not Found');\n" +
-"					}\n" +
-"\n" +
-"					// make sure we're not infinitely looping\n" +
-"					if(walkForId(this)) {\n" +
-"						return cache['{{id}}'].exports;\n" +
 "					}\n" +
 "\n" +
 "					var childModule = dependencies[name](this);\n" +
@@ -85,14 +65,14 @@ var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "					return childModule.exports;\n" +
 "				},\n" +
 "				exports: {},\n" +
-"				id: '{{id}}',\n" +
-"				filename: '{{filename}}',\n" +
+"				id: id,\n" +
+"				filename: id,\n" +
 "				loaded: false,\n" +
 "				children: [],\n" +
 "				parent: parent\n" +
 "			};\n" +
 "\n" +
-"			cache['{{id}}'] = (function(module) {\n" +
+"			cache[id] = (function(module) {\n" +
 "\n" +
 "				var dependencies = undefined, cache = undefined, parent = undefined;\n" +
 "\n" +
@@ -110,9 +90,18 @@ var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "				module.loaded = true;\n" +
 "				return module;\n" +
 "\n" +
-"			})(cache['{{id}}']);\n" +
+"			})(cache[id]);\n" +
 "		}\n" +
-"		return cache['{{id}}'];\n" +
+"\n" +
+"		var ret = cache[id];\n" +
+"\n" +
+"		// clone this object and make the parent the currently calling module\n" +
+"		if(ret.parent !== parent) {\n" +
+"			ret = Object.create(ret);\n" +
+"			ret.parent = parent;\n" +
+"		}\n" +
+"\n" +
+"		return ret;\n" +
 "	};\n" +
 "}";
 var dependenciesWrap = "(function(modules) {\n" +
@@ -134,17 +123,12 @@ var globalWrap = "(function(dependency_cache) {\n" +
 "	// in the browser-build, it falls onto the sandbox's declared require\n" +
 "	// in the bundled build, it falls all the way to window.require\n" +
 "	require = function(name) {\n" +
-"		var module;\n" +
 "\n" +
 "		if(typeof dependencies[name] !== 'function') {\n" +
 "			throw new Error('Module Not Found');\n" +
 "		}\n" +
 "\n" +
-"		module = dependencies[name](this);\n" +
-"\n" +
-"		module.parent = this;\n" +
-"\n" +
-"		return module.exports;\n" +
+"		return dependencies[name](this).exports;\n" +
 "	};\n" +
 "\n" +
 "	require._events = _require._events,\n" +
@@ -870,14 +854,13 @@ var loadModule = function(location, name, callback, raw, parent) {
 			// node_modules
 			// http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders
 			var paths = nodeModulesPaths(resolve(location));
-			var i = 0;
 
 			var tryLoad = function(i) {
 				if(!paths[i]) {
 					callback(new Error("Module Not Found: "+name));
 					return;
 				}
-				load(resolve(paths[i],name), name, function(err, module) {
+				load(resolve(paths[i], name), name, function(err, module) {
 					if(err) {
 						if(err.message.substring(0, "Module Not Found: ".length) === "Module Not Found: ") {
 							i++;
@@ -891,7 +874,7 @@ var loadModule = function(location, name, callback, raw, parent) {
 				}, parent);	
 			};
 
-			tryLoad(i);
+			tryLoad(0);
 		}
 	}
 };

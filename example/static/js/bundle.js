@@ -21,7 +21,19 @@ window.require.ready = function(fn) {
 	this._events.ready = this._events.ready || [];
 	this._events.ready.push(fn);
 };
-(function(dependency_cache) {
+
+
+// shim for object.create
+if (!Object.create) {
+	Object.create = function (o) {
+		if (arguments.length > 1) {
+			throw new Error('Object.create implementation only accepts the first parameter.');
+		}
+		function F() {}
+		F.prototype = o;
+		return new F();
+	};
+}(function(dependency_cache) {
 	var cache = {},
 		dependencies = {};
 
@@ -183,11 +195,6 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 						throw new Error('Module Not Found');
 					}
 
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'].exports;
-					}
-
 					var childModule = dependencies[name](this);
 					this.children.push(childModule);
 					return childModule.exports;
@@ -220,7 +227,12 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game' : function(cache, dependencies) {
 	return function(parent) {
@@ -250,11 +262,6 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -291,7 +298,12 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello' : function(cache, dependencies) {
 	return function(parent) {
@@ -321,11 +333,6 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -362,7 +369,12 @@ module.exports = "hello world";
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js' : function(cache, dependencies) {
 	return function(parent) {
@@ -392,11 +404,6 @@ module.exports = "hello world";
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -434,7 +441,12 @@ module.exports=p;
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery' : function(cache, dependencies) {
 	return function(parent) {
@@ -464,11 +476,6 @@ module.exports=p;
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -503,7 +510,12 @@ module.exports=p;
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js' : function(cache, dependencies) {
 	return function(parent) {
@@ -533,11 +545,6 @@ module.exports=p;
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -577,7 +584,12 @@ console.log('a done');
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js' : function(cache, dependencies) {
 	return function(parent) {
@@ -607,11 +619,6 @@ console.log('a done');
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -651,7 +658,12 @@ console.log('b done');
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular' : function(cache, dependencies) {
 	return function(parent) {
@@ -681,11 +693,6 @@ console.log('b done');
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -723,7 +730,12 @@ console.log('in main, a.done='+a.done+', b.done='+b.done);
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 },'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main' : function(cache, dependencies) {
 	return function(parent) {
@@ -753,11 +765,6 @@ console.log('in main, a.done='+a.done+', b.done='+b.done);
 				require: function(name, assignment) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -796,7 +803,12 @@ require('./circular');
 
 			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main']);
 		}
-		return cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'];
+		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'];
+		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'].parent !== parent) {
+			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main']);
+			ret.parent = parent;
+		}
+		return ret;
 	};
 }
 

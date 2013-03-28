@@ -605,14 +605,13 @@ var loadModule = function(location, name, callback, raw, parent) {
 			// node_modules
 			// http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders
 			var paths = nodeModulesPaths(resolve(location));
-			var i = 0;
 
 			var tryLoad = function(i) {
 				if(!paths[i]) {
 					callback(new Error("Module Not Found: "+name));
 					return;
 				}
-				load(resolve(paths[i],name), name, function(err, module) {
+				load(resolve(paths[i], name), name, function(err, module) {
 					if(err) {
 						if(err.message.substring(0, "Module Not Found: ".length) === "Module Not Found: ") {
 							i++;
@@ -626,7 +625,7 @@ var loadModule = function(location, name, callback, raw, parent) {
 				}, parent);	
 			};
 
-			tryLoad(i);
+			tryLoad(0);
 		}
 	}
 };

@@ -1,36 +1,16 @@
 '{{id}}' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['{{id}}']) {
+		var id = '{{id}}';
 
-			cache['{{id}}'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
-					}
-
-					// make sure we're not infinitely looping
-					if(walkForId(this)) {
-						return cache['{{id}}'].exports;
 					}
 
 					var childModule = dependencies[name](this);
@@ -38,14 +18,14 @@
 					return childModule.exports;
 				},
 				exports: {},
-				id: '{{id}}',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['{{id}}'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -63,8 +43,17 @@
 				module.loaded = true;
 				return module;
 
-			})(cache['{{id}}']);
+			})(cache[id]);
 		}
-		return cache['{{id}}'];
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
+			ret.parent = parent;
+		}
+
+		return ret;
 	};
 }

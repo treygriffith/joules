@@ -1,6 +1,0 @@
-{
-	"dependencies" : {
-		"hello": "./hello.js",
-		"world": "./world"
-	}
-}

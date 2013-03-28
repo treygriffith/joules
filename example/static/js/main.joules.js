@@ -43,17 +43,12 @@ if (!Object.create) {
 	// in the browser-build, it falls onto the sandbox's declared require
 	// in the bundled build, it falls all the way to window.require
 	require = function(name) {
-		var module;
 
 		if(typeof dependencies[name] !== 'function') {
 			throw new Error('Module Not Found');
 		}
 
-		module = dependencies[name](this);
-
-		module.parent = this;
-
-		return module.exports;
+		return dependencies[name](this).exports;
 	};
 
 	require._events = _require._events,
@@ -66,7 +61,7 @@ if (!Object.create) {
 
 	
 
-	modules['./content'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'](cache, dependencies);
+	modules['./content'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/content'](cache, dependencies);
 
 })(dependencies);
 (function(modules) {
@@ -77,12 +72,12 @@ if (!Object.create) {
 
 	
 
-	modules['game'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'](cache, dependencies);
+	modules['game'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/game'](cache, dependencies);
 
 })(dependencies);
 
 
-	modules['./hello'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'](cache, dependencies);
+	modules['./hello'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/hello'](cache, dependencies);
 
 })(dependencies);
 (function(modules) {
@@ -93,40 +88,12 @@ if (!Object.create) {
 
 	
 
-	modules['./jquery-1.8.2.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'](cache, dependencies);
+	modules['./jquery-1.8.2.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery/jquery-1.8.2.js'](cache, dependencies);
 
 })(dependencies);
 
 
-	modules['jquery'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'](cache, dependencies);
-
-})(dependencies);
-(function(modules) {
-	var dependencies = {};
-
-	(function(modules) {
-	var dependencies = {};
-
-	(function(modules) {
-	var dependencies = {};
-
-	(function(modules) {
-	var dependencies = {};
-
-	dependencies['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'](cache, dependencies);
-
-
-	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'](cache, dependencies);
-
-})(dependencies);
-
-
-	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'](cache, dependencies);
-
-})(dependencies);
-
-
-	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'](cache, dependencies);
+	modules['jquery'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery'](cache, dependencies);
 
 })(dependencies);
 (function(modules) {
@@ -138,59 +105,72 @@ if (!Object.create) {
 	(function(modules) {
 	var dependencies = {};
 
-	dependencies['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'](cache, dependencies);
+	(function(modules) {
+	var dependencies = {};
+
+	dependencies['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js'](cache, dependencies);
 
 
-	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'](cache, dependencies);
-
-})(dependencies);
-
-
-	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'](cache, dependencies);
+	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js'](cache, dependencies);
 
 })(dependencies);
 
 
-	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'](cache, dependencies);
+	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js'](cache, dependencies);
 
 })(dependencies);
 
 
-	modules['./circular'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'](cache, dependencies);
+	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js'](cache, dependencies);
 
 })(dependencies);
-dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'](cache, dependencies);
+(function(modules) {
+	var dependencies = {};
+
+	(function(modules) {
+	var dependencies = {};
+
+	(function(modules) {
+	var dependencies = {};
+
+	dependencies['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js'](cache, dependencies);
+
+
+	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js'](cache, dependencies);
+
+})(dependencies);
+
+
+	modules['./a.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js'](cache, dependencies);
+
+})(dependencies);
+
+
+	modules['./b.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js'](cache, dependencies);
+
+})(dependencies);
+
+
+	modules['./circular'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular'](cache, dependencies);
+
+})(dependencies);
+dependencies['/Users/treygriffith/Dropbox/Node/joules/example/static/js/main.js'] = dependency_cache['/Users/treygriffith/Dropbox/Node/joules/example/static/js/main.js'](cache, dependencies);
 
 
 
 })({
 
-	'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content' : function(cache, dependencies) {
+	'/Users/treygriffith/Dropbox/Node/joules/example/static/js/content' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/content';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -200,14 +180,14 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -225,41 +205,30 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/content']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/game' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/game';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -269,14 +238,14 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -296,41 +265,30 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/game']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/hello' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/hello';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -340,14 +298,14 @@ dependencies['./'] = dependency_cache['/Users/treygriffith/Dropbox/Node/jewels/e
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -367,41 +325,30 @@ module.exports = "hello world";
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/hello']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery/jquery-1.8.2.js' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery/jquery-1.8.2.js';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -411,14 +358,14 @@ module.exports = "hello world";
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -439,41 +386,30 @@ module.exports=p;
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery/jquery-1.8.2.js']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/node_modules/jquery';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -483,14 +419,14 @@ module.exports=p;
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -508,41 +444,30 @@ module.exports=p;
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/node_modules/jquery']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/a.js';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -552,14 +477,14 @@ module.exports=p;
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -582,41 +507,30 @@ console.log('a done');
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/a.js']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular/b.js';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -626,14 +540,14 @@ console.log('a done');
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -656,41 +570,30 @@ console.log('b done');
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular/b.js']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/circular';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -700,14 +603,14 @@ console.log('b done');
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -728,41 +631,30 @@ console.log('in main, a.done='+a.done+', b.done='+b.done);
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/circular']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
-},'/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main' : function(cache, dependencies) {
+},'/Users/treygriffith/Dropbox/Node/joules/example/static/js/main.js' : function(cache, dependencies) {
 	return function(parent) {
-		var found = [];
-		var walkForId = function(module, stopId) {
-			if(stopId && module.id === stopId) {
-				return module;
-			} else if(!stopId) {
-				stopId = module.id;
-			}
-			if(~found.indexOf(module.id)) {
-				return false;
-			}
-			found.push(module.id);
-			for(var i=0;i<module.children.length;i++) {
-				var ret = walkForId(module.children[i], stopId);
-				if(ret) {
-					return ret;
-				}
-			}
-			return false;
-		};
 
-		if(!cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main']) {
+		var id = '/Users/treygriffith/Dropbox/Node/joules/example/static/js/main.js';
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'] = {
-				require: function(name, assignment) {
+		if(!cache[id]) {
+
+			// instantiate the module before executing it's code.
+			// this prevents infinite loops on circular dependencies
+			cache[id] = {
+				require: function(name) {
 					if(typeof dependencies[name] !== 'function') {
 						throw new Error('Module Not Found');
 					}
@@ -772,14 +664,14 @@ console.log('in main, a.done='+a.done+', b.done='+b.done);
 					return childModule.exports;
 				},
 				exports: {},
-				id: '/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main',
-				filename: '{{filename}}',
+				id: id,
+				filename: id,
 				loaded: false,
 				children: [],
 				parent: parent
 			};
 
-			cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'] = (function(module) {
+			cache[id] = (function(module) {
 
 				var dependencies = undefined, cache = undefined, parent = undefined;
 
@@ -801,17 +693,21 @@ require('./circular');
 				module.loaded = true;
 				return module;
 
-			})(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main']);
+			})(cache[id]);
 		}
-		var ret = cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'];
-		if(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main'].parent !== parent) {
-			ret = Object.create(cache['/Users/treygriffith/Dropbox/Node/jewels/example/static/js/main']);
+
+		var ret = cache[id];
+
+		// clone this object and make the parent the currently calling module
+		if(ret.parent !== parent) {
+			ret = Object.create(ret);
 			ret.parent = parent;
 		}
+
 		return ret;
 	};
 }
 
 });
-window.require('./');
+window.require('/Users/treygriffith/Dropbox/Node/joules/example/static/js/main.js');
 window.require.fire('ready');

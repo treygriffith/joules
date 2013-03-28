@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
 
 var fs = require('fs'),
 	path = require('path'),
@@ -10,7 +10,7 @@ var fs = require('fs'),
 			.describe('o', 'Target output filename')
 			.argv;
 
-var location = argv[0];
+var location = argv._[0];
 
 
 function writeScript(to, script) {
@@ -38,6 +38,11 @@ function output_name(dir, target) {
 }
 
 joules.build(path.resolve(process.cwd(), location), function(err, script) {
+	if(err) throw err;
+
+	if(!script) {
+		throw new Error("No module loaded.");
+	}
 
 	fs.exists(path.resolve(process.cwd(), location), function(exists) {
 		if(exists) {

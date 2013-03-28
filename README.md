@@ -5,7 +5,21 @@ Node.js-style module loading on the browser with rapid development and robust de
 Installation
 ------------
 
-TODO
+Using NPM, pass the `-g` flag to make the `joules` command available on the command line
+
+```bash
+
+	$ npm install joules -g
+
+```
+
+or with Git
+
+```bash
+
+	$ 
+
+```
 
 
 Usage

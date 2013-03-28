@@ -22,12 +22,13 @@ Why not use Browserify?
 
 Browserify is a great project and one of the big inspirations for this project. However, one of the things that I think RequireJS got right was the development environment - devs want to be able to rapidly change code and see results. Browserify requires a build step, and while a build step is important for a production environment to maximize end-user speed and minimize server load, for development a build step is detrimental.
 
+
 Why this implemenation?
 -----------------------
 
-My hope is that by taking advantage of the primary strengths of the two leading Javascript browser module loaders, RequireJS and Browserify, I can produce an experience that is ultimately better for everyone.
+My hope is that by taking advantage of the primary strengths of the two leading Javascript browser module loaders, RequireJS and Browserify, I can produce an experience that is ultimately better for developers.
 
-It takes the strength of the CommonJS/Node.js module community and everything else that goes along with it, and puts it into an environment that is suitable for rapid development as well as robust deployment.
+It takes the strength of the CommonJS/Node.js module system and community (like Browserify), and puts it into an browser environment that is suitable for rapid development as well as robust deployment (like RequireJS).
 
 When CommonJS was first discussed, the browser was supposed to have stop-gap measures until module loading was natively supported. Those stop-gap measures were:
 1) Either use a server to translate CJS modules to something usable in the browser.
@@ -66,14 +67,14 @@ There are several issues with this implementation that do not come up or are bet
 
 * Cross-domain/CDN usage - when using this in development, any CDN or other domain you use (e.g. your production domain) has to include the appropriate CORS header to allow your local development environment access. (https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS#Access-Control-Allow-Origin). Since this is one-time setup, it is again viewed as an acceptable sacrifice.
 
-* Debugging - usage in both development and deployment transforms your scripts in such a way that errors will not be thrown in a place that is recognizable in your source file. For simple debugging, it is serviceable, but for more complex web apps a better solution is needed. Some browsers are beginning to implement Source maps, which this will support (eventually) which should help with debugging, but it is not yet widely supported.
+* Debugging - usage in both development and deployment transforms your scripts in such a way that errors will not be thrown in your source file. For simple debugging, it is serviceable, but for more complex web apps a better solution is needed. Some browsers are beginning to implement Source maps, which this will support (eventually) which should help with debugging, but it is not yet widely supported.
 
 * One module per file - part of the CommonJS spec is that only one module is defined per file. This was a deliberate design choice by CommonJS, so it is not by itself an issue. It becomes an issue when talking about a production environment - which is delivered in one file
 
 * Inline scripts are not cross-browser - This implementation supports inline scripts that are housed inside of a `require.ready()` callback. It uses `Function.prototype.toString()` to parse out the require dependencies. This behavior is not 100% cross-browser, but since this is a development characteristic of an inline script, it should not be an issue.
 
-* Variable `require`s - Both the development and deployment environments rely on RegExp parsing to determine dependencies via `require` calls. Therefore any call to `require` with a variable value (or any value that is not a string literal) will at best not return a module, and at worst choke the parser. Since this isn't a wise design decision anyway, it's not an area I'll spend much time addressing.
+* Variable `require`s - Both the development and deployment environments rely on RegExp parsing to determine dependencies via `require` calls. Therefore any call to `require` with a variable value (or any value that is not a string literal) will at best not return a module, and at worst choke the parser. Generally this is an undesirable design, and can be better replaced with variability within in the `require`d module.
 
-* Multiple IO calls - In the development environment, the browser makes multiple IO calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. This can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's.
+* Multiple I/O calls - In the development environment, the browser makes multiple IO calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. This can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's.
 
 * Delayed execution - because the CommonJS style `require` expects a return value instead of a callback, every dependency (and by extension, ever dependency down in the chain) must be available as soon as any code in one sandbox is executed. In practice this means slower start times, as every single dependency, regardless of how soon it will be needed must be loaded. This is mitigated in the deployment version, but is still an issue.

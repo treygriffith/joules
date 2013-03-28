@@ -15,13 +15,14 @@ Usage
 When using in development, you just need to add the development script to every page that you want to have module loading support, before any scripts that use modules.
 
 ```html
+
 	<html>
 		<head>
 			<title>My Cool Webpage</title>
 		</head>
 		<body>
 			<p>This is my cool webpage. Welcome!</p>
-			<script src="/js/joules-dev.js"></script>
+			<script src="/js/joules.js"></script>
 			<script>
 				require.ready(function() {
 					var $ = require('./js/jquery');
@@ -30,14 +31,18 @@ When using in development, you just need to add the development script to every 
 			</script>
 		</body>
 	</html>
+
 ```
 
 You'll notice that when using a script inline on the page, it has to be wrapped in a function that is a callback for `require.ready`, which functions similarly to `$(document).ready` for jQuery, but waits for dependencies to load as opposed to waiting for `domReady`.
 
 You should note that every dependency must be declared within the callback for `require.ready`. For example, this won't work:
+
 ```html
+
 	...
 	<script>
+		// DON'T DO THIS
 		var ready = function() {
 			var $ = require('jquery');
 		}
@@ -46,21 +51,30 @@ You should note that every dependency must be declared within the callback for `
 		});
 	</script>
 	...
+
 ```
 
 You can also define a `main` script, which is the primary entry-point for the javascript on the page. For larger web apps, this is usually desirable when compared to inline scripts. This is similar to RequireJS's behavior:
+
 `index.html`:
+
 ```html
+
 	...
-	<script src="/js/joules.js" data-main="js/main.js"></script>
+	<script src="/js/joules.js" data-main="/js/main.js"></script>
 	....
+
 ```
+
 `main.js`:
+
 ```javascript
+
 	var $ = require('jquery');
 	var content = require('./content');
 
 	$("p").text(content);
+
 ```
 
 Joules supports module loading using the [same lookup pattern as Node](http://nodejs.org/api/modules.html#modules_modules). In addition, it also looks for HTML files (as index files, and also as exact filenames) that it can scan for inline javascript.
@@ -73,14 +87,19 @@ To build a script, you simple have to define a target. The target can be an HTML
 ##### Command Line
 
 ```bash
+
 	$ joules ./js/main.js
 	main.js.joules.js written.
+
 ```
 
-By default, Joules outputs a file called `target.joules.js` where target is the target module or filename, in the same directory as the target module or file. This can be modified by passing the `out` flag.
+By default, Joules outputs a file called `target.joules.js` where `target` is the target module or filename, in the same directory as the target module or file. This can be modified by passing the `out` flag.
+
 ```bash
+
 	$ joules ./js/main.js --out ./js/bundle.js
 	bundle.js written.
+
 ```
 
 #### Programmatic
@@ -88,10 +107,12 @@ By default, Joules outputs a file called `target.joules.js` where target is the 
 For using Joules as part of a larger build process, require the Joules module:
 
 ```javascript
+
 	var joules = require('joules');
 	joules.build('./js/main.js', function(err, script) {
 		fs.writeFileSync('./js/my-bundle.js', script, 'utf8');
 	});
+
 ```
 
 

@@ -26,4 +26,4 @@ TO DO:
 [x] create build process for deployment
 [x] parse dependencies
 [ ] add source mapping
-[ ] circular dependencies
+[x] circular dependencies

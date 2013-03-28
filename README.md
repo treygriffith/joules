@@ -6,6 +6,8 @@ Supports node_modules (via package.json) as well as files.
 
 Inline scripting supported via `require.ready` callback similar to the `$.ready` jQuery callback
 
+Scripts are fetched asynchronously in development, and are pre-compiled in deployment, but are always guaranteed to be available prior to script execution
+
 Multiple inline scripts on one page are sandboxed from each other
 
 Supports the `data-main` attribute for development (like RequireJS)
@@ -13,6 +15,8 @@ Supports the `data-main` attribute for development (like RequireJS)
 Dependencies are determined on the fly - no need to state them up front
 
 Nested dependency support
+
+Circular dependency support (http://nodejs.org/api/modules.html#modules_cycles)
 
 Module execution environment in the browser is very close to the server.
 

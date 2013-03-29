@@ -6,6 +6,7 @@
 	},
 	"main": "./lib/build/deployment/index.js",
 	"bin": {
-		"joules": "bin/deploy-build.js"
+		"joules": "bin/deploy-build.js",
+		"joules-dev": "bin/dev-build.js"
 	}
 }

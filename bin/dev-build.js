@@ -1,9 +1,12 @@
-// invoked as node dev-build `location`
-// 
-var location = process.argv[2],
+#!/usr/bin/env node
+
+var argv = require('optimist').argv,
+	fs = require('fs'),
 	path = require('path'),
-	write = require('../build/development'),
+	write = require(__dirname + '/../lib/build/development'),
 	output_filename = 'joules.js';
+
+var location = argv._[0];
 
 
 function writeBrowser(to) {

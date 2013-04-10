@@ -16,15 +16,23 @@ var loadMain = function(main) {
 		if(main[0] === '/') {
 			location = '/';
 		}
-		loadModule(location, main, function(err, module) {
-			if(err) throw err;
+		loadModule(location, main, writeModule);
+	}
+};
 
-			var script = document.createElement('script');
-			script.type = 'text/javascript';
-			script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
-			window.document.body.appendChild(script);		
-		});
-	}	
+var writeModule = function(err, module) {
+	if(err) throw err;
+
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
+	try {
+		window.document.body.appendChild(script);
+	} catch(e) {
+		console.log("Couldn't append script:");
+		console.log(script.innerText);
+		throw e;
+	}
 };
 
 var scripts = window.document.getElementsByTagName("script");
@@ -44,14 +52,7 @@ window.require.ready = function(fn) {
 	var whole = fn.toString();
 	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
 
-	loadModule(body, Math.round(Math.random()*10000).toString(), function(err, module) {
-		if(err) throw err;
-
-		var script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})();';
-		window.document.body.appendChild(script);
-	}, true);
+	loadModule(body, Math.round(Math.random()*10000).toString(), writeModule, true);
 };
 var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "	return function(parent) {\n" +
@@ -218,6 +219,9 @@ Script.prototype.invoke = function() {
 			.replace(/{{name}}/g, this.name);
 };
 
+// For some reason, in the foam-client script all the dollar signs are being overwritten with the bottom portion of the cacheWrap
+// actually, sometimes it's the top portion...
+
 Script.prototype.addToCache = function(cache) {
 	var wrapped;
 	cache = cache || this.cache;
@@ -258,8 +262,8 @@ if(typeof browserBuild === 'undefined') {
 	module.exports = Script;
 }var manifest_filename = "index.json",
 	readFile,
-	exists,
-	stat,
+	_exists,
+	_stat,
 	resolve,
 	join,
 	sep,
@@ -309,8 +313,8 @@ if(typeof browserBuild === 'undefined') {
 
 if(typeof browserBuild === 'undefined') {
 	readFile = require('fs').readFile;
-	exists = require('fs').exists;
-	stat = require('fs').stat;
+	_exists = require('fs').exists;
+	_stat = require('fs').stat;
 	resolve = require('path').resolve;
 	join = require('path').join;
 	sep = require('path').sep;
@@ -368,7 +372,7 @@ if(typeof browserBuild === 'undefined') {
 	};
 
 	// xhr
-	function sendRequest(url, method, callback) {
+	var sendRequest = function(url, method, callback) {
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		req.open(method,url,true);
@@ -378,16 +382,16 @@ if(typeof browserBuild === 'undefined') {
 		};
 		if (req.readyState == 4) return;
 		req.send();
-	}
+	};
 
 	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")}
+		function () {return new XMLHttpRequest();},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP");},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP");},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP");}
 	];
 
-	function createXMLHTTPObject() {
+	var createXMLHTTPObject = function() {
 		var xmlhttp = false;
 		for (var i=0;i<XMLHttpFactories.length;i++) {
 			try {
@@ -399,7 +403,7 @@ if(typeof browserBuild === 'undefined') {
 			break;
 		}
 		return xmlhttp;
-	}
+	};
 
 	// shim for fs functions
 	readFile = function(path, encoding, callback) {
@@ -415,7 +419,7 @@ if(typeof browserBuild === 'undefined') {
 			callback(null, req.responseText);
 		});
 	};
-	exists = function(path, callback) {
+	_exists = function(path, callback) {
 		sendRequest(path, 'HEAD', function(req) {
 			if(req.status === 200 || req.status === 304) {
 				callback(true);
@@ -424,7 +428,7 @@ if(typeof browserBuild === 'undefined') {
 			callback(false);
 		});
 	};
-	stat = function(path, callback) {
+	_stat = function(path, callback) {
 		exists(path, function(exist) {
 			if(!exist) {
 				callback(new Error("File does not exist"));
@@ -520,7 +524,7 @@ if(typeof browserBuild === 'undefined') {
 	// must be no slashes, empty elements, or device names (c:\) in the array
 	// (so also no leading and trailing slashes - it does not distinguish
 	// relative and absolute paths)
-	function normalizeArray(parts, allowAboveRoot) {
+	var normalizeArray = function(parts, allowAboveRoot) {
 		// if the path tries to go above the root, `up` ends up > 0
 		var up = 0;
 		for (var i = parts.length - 1; i >= 0; i--) {
@@ -544,7 +548,7 @@ if(typeof browserBuild === 'undefined') {
 		}
 
 		return parts;
-	}
+	};
 
 }
 
@@ -556,8 +560,57 @@ function parentDir(location) {
 }
 
 function isFile(name) {
-	return name[0] === '.' || name[0] === '/';
-};
+	return (name[0] === '.' && name[1] === '/') || name[0] === '/';
+}
+
+function fileExt(name) {
+	return name.slice(name.lastIndexOf('.'));
+}
+
+// Load up a hints file
+var hints;
+
+exists(resolve('__hints.json'), function(file_exists) {
+	if(file_exists) {
+		readFile(resolve('__hints.json'), function(err, contents) {
+			if(err) throw err;
+
+			hints = JSON.parse(contents);
+
+		});
+	}
+});
+
+function stat(file, callback) {
+	if(hints) {
+		callback(null, {
+			isFile: function() {
+				return !!~hints.files.indexOf(file);
+			},
+			isDirectory: function() {
+				return !!~hints.directories.indexOf(file);
+			}
+		});
+		return;
+	}
+	_stat(file, callback);
+}
+
+function exists(file, callback) {
+	if(hints) {
+		if(~hints.files.indexOf(file)) {
+			callback(true);
+			return;
+		}
+		if(~hints.directories.indexOf(file)) {
+			callback(true);
+			return;
+		}
+		callback(false);
+		return;
+	}
+	_exists(file, callback);
+}
 
 // core should be key/value pairs of the name of the module and it's location. This is tricky for the browser side. Do we deliver all of the core modules into browser.js?
 var core = {};
@@ -583,7 +636,7 @@ function nodeModulesPaths (start) {
     return dirs;
 }
 
-function loadFile(name, location, callback, parent, isDirectory, isHtml) {
+function loadFile(name, location, callback, parent, isHtml) {
 
 	return function(err, contents) {
 		if(err) {
@@ -592,7 +645,7 @@ function loadFile(name, location, callback, parent, isDirectory, isHtml) {
 		}
 
 		var dependencies = findDependencies(contents, isHtml),
-			script = new Script(parent, [], resolve(location), name, !!isHtml ? null : contents),
+			script = new Script(parent, [], location, name, !!isHtml ? null : contents),
 			done = function() {
 				callback(null, script);
 			},
@@ -616,17 +669,8 @@ function loadFile(name, location, callback, parent, isDirectory, isHtml) {
 			return;
 		}
 
-		console.log("dependencies for "+name+" in "+location+": ",dependencies);
-
 		dependencies.forEach(function(dep_location) {
-			var dir, locations;
-			if(isDirectory) {
-				dir = location;
-			} else {
-				locations = location.split(sep);
-				locations.pop();
-				dir = locations.join(sep);
-			}
+			var dir = parentDir(location);
 
 			// if this script has a dependency identical to itself or it's parent, just add a reference, don't try to load it again
 
@@ -652,168 +696,13 @@ function loadFile(name, location, callback, parent, isDirectory, isHtml) {
 	};
 }
 
-function loadJs(name, location, callback, parent, isDirectory) {
-	return loadFile(name, location, callback, parent, isDirectory, false);
+function loadJs(name, location, callback, parent) {
+	return loadFile(name, location, callback, parent, false);
 }
 
-function loadHtml(name, location, callback, parent, isDirectory) {
-	return loadFile(name, location, callback, parent, isDirectory, true);
+function loadHtml(name, location, callback, parent) {
+	return loadFile(name, location, callback, parent, true);
 }
-
-function loadDir(name, location, callback, parent) {
-
-	// look for a package.json
-	exists(resolve(location, 'package.json'), function(file_exists) {
-		if(file_exists) {
-			// parse json to find main
-			
-			readFile(resolve(location, 'package.json'), 'utf8', function(err, raw) {
-				if(err) {
-					callback(err);
-					return;
-				}
-
-				var manifest = {};
-
-				try {
-					manifest = JSON.parse(raw);
-				} catch(e) {
-					callback(e);
-					return;
-				}
-
-				if(!manifest.main) {
-					callback(new Error("Package.json must have 'main' defined"));
-					return;
-				}
-
-				// load the main file
-				// the location should be the same as the directory that the main file is in, not the location of the manifest itself.
-				// this prevents main files in deeper directories, like 'lib/my_lib.js' from not being able to require realtive directories
-				readFile(resolve(location, manifest.main), 'utf8', loadJs(name, parentDir(resolve(location, manifest.main)), callback, parent, true));
-			});
-
-			return;
-		}
-
-		// look for an index file
-		
-		exists(resolve(location, 'index'), function(file_exists) {
-			if(file_exists) {
-				// index is our entry point
-				readFile(resolve(location, 'index'), 'utf8', loadJs(name, location, callback, parent, true));
-				return;
-			}
-
-			exists(resolve(location, 'index.js'), function(file_exists) {
-				if(file_exists) {
-					// index.js is our entry point
-					readFile(resolve(location, 'index.js'), 'utf8', loadJs(name, location, callback, parent, true));
-					return;
-				}
-
-				// look for an index.html file
-				// NOTE: the .html extension is hardcoded in now, but it probably makes sense to make this a
-				// parameter so that other templates can be searched (e.g. .jade, .erb)
-				exists(resolve(location, 'index.html'), function(file_exists) {
-					if(file_exists) {
-						readFile(resolve(location, 'index.html'), 'utf8', loadHtml(name, location, callback, parent, true));
-						return;
-					}
-
-					// No module found - throw this error at build time, not runtime
-					callback(new Error("Module Not Found: "+location));
-				});
-			});
-		});
-	});	
-}
-
-function load(location, name, _callback, parent) {
-	if(loadedModules[location]) {
-		var module = Object.create(loadedModules[location]);
-		module.name = name;
-		module.parent = parent;
-		_callback(null,  module);
-	}
-
-	var callback = function(err, module) {
-		if(err) {
-			_callback(err);
-			return;
-		}
-		loadedModules[location] = module;
-		_callback(null, module);
-	};
-
-	exists(location, function(file_exists) {
-		if(file_exists) {
-
-			// determine if this is a directory
-			stat(location, function(err, stats) {
-				if(err) {
-					callback(err);
-					return;
-				}
-
-				if(stats.isDirectory()) {
-					// this is a directory, so we treat it like one
-					loadDir(name, location, callback, parent);
-					return;
-				}
-
-				if(!stats.isFile()) {
-					throw new Error("Module is not a file or a directory");
-				}
-
-				// exact filename exists, parse as javascript
-				readFile(location, 'utf8', loadJs(name, location, callback, parent));
-			});
-			
-			return;
-		}
-
-		exists(location + '.js', function(file_exists) {
-			if(file_exists) {
-				// .js appended, parse as javascript
-				readFile(location + '.js', 'utf8', loadJs(name, location, callback, parent));
-				return;
-			}
-
-			exists(location + '.json', function(file_exists) {
-				if(file_exists) {
-					// .json appended, parse as json
-					readFile(location + '.json', 'utf8', function(err, contents) {
-						if(err) {
-							callback(err);
-							return;
-						}
-						// export the parsed JSON in the browser
-						callback(null, new Script(parent, [], location, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
-					});
-					
-					return;
-				}
-
-				// check if it is html
-				// NOTE: the .html extension is hardcoded in now, but it probably makes sense to make this a
-				// parameter so that other templates can be searched (e.g. .jade, .erb)
-				exists(location + '.html', function(file_exists) {
-					if(file_exists) {
-						readFile(location + '.html', loadHtml(name, location, callback, parent));
-
-						return;
-					}
-				});
-
-				// treat this as a directory
-				loadDir(name, location, callback, parent);
-
-			});
-		});
-	});
-}
-
 
 function findDependencies(string, isHtml) {
 	var matches = [],
@@ -842,73 +731,204 @@ function findDependencies(string, isHtml) {
 
 // raw flag signifies that location is actually the raw contents of the entrypoint file
 var loadModule = function(location, name, callback, raw, parent) {
-	console.log("loading "+name+", in location: "+location);
 
 	if(raw) {
 		loadJs(name, './', callback, parent)(null, location);
 		return;
 	}
 
+	resolveModule(location, name, function(err, resolved) {
+		if(err) {
+			callback(err);
+			return;
+		}
 
-	if(isFile(name)) {
-		// this is a file
-		load(resolve(location, name), name, function(err, module) {
-			if(err){
+		if(loadedModules[resolved]) {
+			var module = Object.create(loadedModules[resolved]);
+			module.name = name;
+			module.parent = parent;
+			callback(null,  module);
+			return;
+		}
+
+		var cacheModule = function(err, module) {
+			if(err) {
 				callback(err);
 				return;
 			}
-			// save the module to the cache
-			loadedModules[resolve(location, name)] = module;
-
+			loadedModules[resolved] = module;
 			callback(null, module);
-		}, parent);
+		};
 
-	} else if(isCore(name)) {
-		// core module
-		if(core[name]) {
-			if(loadedModules[name]) {
-				callback(null, loadedModules[name]);
-				return;
-			}
-			readFile(core[name], 'utf8', loadJs(name, name, function(err, module) {
+		var ext = fileExt(resolved);
+
+		if(ext === 'json') {
+			readFile(resolved, 'utf8', function(err, contents) {
 				if(err) {
 					callback(err);
 					return;
 				}
-				loadedModules[name] = module;
-			}, parent));
+				// export the parsed JSON in the browser
+				cacheModule(null, new Script(parent, [], resolved, name, "module.exports = JSON.parse('" + contents.replace(/'/g, "\'").replace(/\n/g, " ") + "');"));
+			});
 			return;
 		}
-		throw new Error("Core Module: "+name+ " is not implemented.");
-			
+
+		if(ext === 'html') {
+			readFile(resolved, loadHtml(name, resolved, cacheModule, parent));
+			return;
+		}
+
+		readFile(resolved, 'utf8', loadJs(name, resolved, cacheModule, parent));
+
+	});
+};
+
+function resolveModule(location, name, callback) {
+	var resolved = resolve(location, name);
+
+	if(isFile(name)) {
+		// local reference
+		// check for exact filename or directory name match
+		exists(resolved, function(file_exists) {
+			if(file_exists) {
+				stat(resolved, function(err, stats) {
+					if(err) {
+						callback(err);
+						return;
+					}
+
+					if(stats.isDirectory()) {
+						// look for package.json
+						exists(resolve(resolved, "package.json"), function(pkg_exists) {
+							if(pkg_exists) {
+								readFile(resolve(resolved, "package.json"), "utf8", function(err, raw) {
+									var pkg;
+
+									if(err) {
+										callback(err);
+										return;
+									}
+
+									try {
+										pkg = JSON.parse(raw);
+									} catch(e) {
+										callback(e);
+										return;
+									}
+
+									if(pkg && pkg.main) {
+										callback(null, resolve(resolved, pkg.main));
+										return;
+									}
+
+									callback(new Error("Module Not Found: "+name));
+								});
+
+								return;
+							}
+
+							// look for index file
+							exists(resolve(resolved, "index"), function(file_exists) {
+								if(file_exists) {
+									callback(null, resolve(resolved, "index"));
+									return;
+								}
+
+								exists(resolve(resolved, "index.js"), function(file_exists) {
+									if(file_exists) {
+										callback(null, resolve(resolved, "index.js"));
+										return;
+									}
+
+									exists(resolve(resolved, "index.html"), function(file_exists) {
+										if(file_exists) {
+											callback(null, resolve(resolved, "index.js"));
+											return;
+										}
+
+										callback(new Error("Module Not Found: "+name));
+
+									});
+
+								});
+
+							});
+						});
+
+						return;
+					}
+
+					if(stats.isFile()) {
+						// an exact filename match
+						callback(null, resolved);
+						return;
+					}
+
+					callback(new Error("Object is neither a file nor a directory."));
+				});
+			} else {
+				// no exact match, check for variations
+				exists(resolved + '.js', function(file_exists) {
+					if(file_exists) {
+						callback(null, resolved + '.js');
+						return;
+					}
+
+					exists(resolved + '.json', function(file_exists) {
+						if(file_exists) {
+							callback(null, resolved + '.json');
+							return;
+						}
+
+						exists(resolved + '.html', function(file_exists) {
+							if(file_exists) {
+								callback(null, resolved + '.html');
+								return;
+							}
+
+							callback(new Error("Module Not Found: "+name));
+						});
+					});
+				});
+			}
+		});
 	} else {
-		// node_modules
+		// built-in or node_module
+		if(isCore(name)) {
+			// built-in
+			if(!core[name]) {
+				callback(new Error(name + " is not implemented."));
+			}
+
+			callback(null, core[name]);
+			return;
+		}
+
+		// node_module
 		// http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders
 		var paths = nodeModulesPaths(resolve(location));
-
-		var tryLoad = function(i) {
+		var pathLoop = function(i) {
 			if(!paths[i]) {
 				callback(new Error("Module Not Found: "+name));
 				return;
 			}
-			console.log("trying path ",resolve(paths[i], name));
-			load(resolve(paths[i], name), name, function(err, module) {
+			resolveModule(paths[i], './' + name, function(err, resolvedModule) {
 				if(err) {
 					if(err.message.substring(0, "Module Not Found: ".length) === "Module Not Found: ") {
-						i++;
-						tryLoad(i);
-						return;
+						pathLoop(i+1);
+					} else {
+						callback(err);
 					}
-					callback(err);
 					return;
 				}
-				callback(null, module);
-			}, parent);	
+				callback(null, resolvedModule);
+			});
 		};
 
-		tryLoad(0);
+		pathLoop(0);
 	}
-};
+}
 
 if(typeof browserBuild === 'undefined') {
 	module.exports = loadModule;

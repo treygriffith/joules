@@ -27,7 +27,18 @@ or clone the repository with Git
 Usage
 -----
 
-### Development 
+### Development
+
+#### Building the Development Script
+
+Joules comes with a development script, `joules.js`, in the root directory, but it can be re-built at any time with the `joules-dev` command:
+
+```bash
+	$ joules-dev public/js
+	/Users/username/project/public/js/joules.js written
+```
+#### Using in your project
+
 When using in development, you just need to add the development script to every page that you want to have module loading support, before any scripts that use modules.
 
 ```html
@@ -50,7 +61,9 @@ When using in development, you just need to add the development script to every 
 
 You'll notice that when using a script inline on the page, it has to be wrapped in a function that is a callback for `require.ready`, which functions similarly to `$(document).ready` for jQuery, but waits for dependencies to load as opposed to waiting for `domReady`.
 
-You should note that every dependency must be declared within the callback for `require.ready`. For example, this won't work:
+#### Inline Dependency Declaration Limitations
+
+You should note that every dependency must be declared within the function body of the callback for `require.ready`. For example, this won't work:
 
 ```html
 	...
@@ -60,13 +73,15 @@ You should note that every dependency must be declared within the callback for `
 			var $ = require('jquery');
 		}
 		require.ready(function() {
+			// no dependencies are declared within the callback function body
 			ready();
 		});
 	</script>
 	...
 ```
+#### Main Entrypoint
 
-You can also define a `main` script, which is the primary entry-point for the javascript on the page. For larger web apps, this is usually desirable when compared to inline scripts. This is similar to RequireJS's behavior:
+You can also define a `main` script, which is the primary entry-point for the javascript on the page. Scripts defined externally do not need the `require.ready` callback - they won't be invoked until all dependencies are loaded. For larger web apps, this is usually desirable when compared to inline scripts. This is similar to RequireJS's behavior:
 
 `index.html`:
 
@@ -85,40 +100,90 @@ You can also define a `main` script, which is the primary entry-point for the ja
 	$("p").text(content);
 ```
 
-Joules supports module loading using the [same lookup pattern as Node](http://nodejs.org/api/modules.html#modules_modules). In addition, it also looks for HTML files (as index files, and also as exact filenames) that it can scan for inline javascript.
+#### Multiple Scripts
+
+Joules supports multiple `data-main` scripts (in different script tags) as well as multiple inline script. Each inline script and `data-main` script will have dependencies loaded independently.
+
+#### Module Lookup
+
+Joules loads modules using the [same lookup pattern as Node](http://nodejs.org/api/modules.html#modules_modules). In addition, it also looks for HTML files (as index files, and also as exact filenames) that it can scan for inline javascript. The HTML behavior is recommended only when targeting as the base module, not as a way to reference dependencies.
+
+#### Hinting
+
+Due to the sometimes lengthy lookup process for modules, using HTTP requests can be burdensome, even in a development environment. To help alleviate the problem, Joules provides a way to generate a hinting file for your public directory to reduce HTTP requests.
+
+If you're using Node.js, the hinting file is generated as follows:
+
+```javascript
+	// public is the directory from which our static assets are served
+	joules.hint('./public', function(err) {
+		if(err) throw err;
+		console.log("hinting file created.");
+	});
+```
+
+This command automatically watches the `./public` directory for any changes, and will update the hinting file appropriately, allowing you to keep the same rapid development environment without tons of HTTP requests.
 
 ### Deployment
 To serve your modules as a compiled bundle that is optimized for deployment, you can use the command line builder, or the programmatic version of the same tool for use in a larger build process.
 
-To build a script, you simply have to define a target. The target can be an HTML file, which will be scanned for inline javascript, or the main entrypoint to your program, like `main.js` in the previous example.
+To build a script, you simply have to define a target. The target can be an HTML file, which will be scanned for inline javascript, or the main entrypoint to your program, like `main.js` in the development section.
 
-#### Command Line
+#### Command Line Build
 
 ```bash
 	$ joules ./js/main.js
-	main.js.joules.js written.
+	main.joules.js written.
 ```
 
 By default, Joules outputs a file called `target.joules.js` where `target` is the target module or filename, in the same directory as the target module or file. This can be modified by passing the `out` flag.
 
 ```bash
-
 	$ joules ./js/main.js --out ./js/bundle.js
 	bundle.js written.
-
 ```
 
-#### Programmatic
+#### Programmatic Build
 
 For using Joules as part of a larger build process, require the Joules module:
 
 ```javascript
-
 	var joules = require('joules');
 	joules.build('./js/main.js', function(err, script) {
 		fs.writeFileSync('./js/my-bundle.js', script, 'utf8');
 	});
+```
 
+#### Using in your project
+
+Once you've built your bundled file, you can include it like any regular script on the page. To borrow examples from the deployment section:
+
+* Targeting an external script, `main.js`:
+
+```html
+	<html>
+		<head>
+			<title>My Cool Webpage</title>
+		</head>
+		<body>
+			<p>This is my cool webpage. Welcome!</p>
+			<script src="/js/main.joules.js"></script>
+		</body>
+	</html>
+```
+
+* Targeting the inline script for this page, `index.html`
+
+```html
+	<html>
+		<head>
+			<title>My Cool Webpage</title>
+		</head>
+		<body>
+			<p>This is my cool webpage. Welcome!</p>
+			<script src="/js/index.joules.js"></script>
+		</body>
+	</html>
 ```
 
 
@@ -133,17 +198,19 @@ Why not use RequireJS?
 ---------------------
 (or another AMD module loader)
 
-The CommonJS Module loading standard (or rather, Node's "interpretation" of the standard) is a more comfortable way to include dependencies, and has tons of traction on the server side. From a module perspective, it is by far the largest ecosystem out there, so it only makes sense to make whatever we use in the browser compatible with that.
+The CommonJS Module loading standard (or rather, Node's "interpretation" of the standard) is a more comfortable way to include dependencies, and has tons of traction on the server side. From a module perspective, it is by far the largest ecosystem out there, so it makes sense to maximize browser modules with Node-style modules.
 
 AMD works well for what it's for, which is asynchronous module-loading on the web. However the javascript ecosystem is much larger than that, and I think that by limiting use to the browser only, it's limiting its usefulness to developers.
 
-In addition to the clunky syntax it forces on you, it also forces you to have a certain project hierarchy for scripts. While practical in terms of reducing I/O, I think a module loader should be unopinionated in terms of project structure.
+AMD requires that module developers include a bunch of boilerplate in their projects, which doesn't make sense for maximum compatibility.
+
+In addition to the clunky syntax it forces on you, RequireJS in particular also forces you to have a certain project hierarchy for scripts. While practical in terms of reducing I/O, I think a module loader should be unopinionated in terms of project structure.
 
 
 Why not use Browserify?
 -----------------------
 
-Browserify is a great project and one of the big inspirations for this project. However, one of the things that I think RequireJS got right was the development environment - devs want to be able to rapidly change code and see results. Browserify requires a build step, and while a build step is important for a production environment to maximize end-user speed and minimize server load, for development a build step is detrimental.
+Browserify is a great project and one of the big inspirations for this project. However, one of the things that I think RequireJS got right was the development environment - devs want to be able to rapidly change code and see results. Browserify requires a build step, and while a build step is important for a production environment to maximize end-user speed and minimize server load, for development a build step is detrimental to developer speed.
 
 That said, the work that Browserify has done on translating Node's core modules for the web is excellent, and I hope to incorporate those into this project as well as extend them where possible.
 
@@ -200,9 +267,11 @@ There are several issues with Joules that do not come up or are better supported
 
 * Variable `require`s - Both the development and deployment environments rely on RegExp parsing to determine dependencies via `require` calls. Therefore any call to `require` with a variable value (or any value that is not a string literal) will at best not return a module, and at worst choke the parser. Generally this is an undesirable design in any case, and can be better replaced with variability within in the `require`d module.
 
-* Multiple I/O calls - In the development environment, the browser makes multiple I/O calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. While this is usually acceptable in a server environment, on the browser this can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's. To mitigate this, you can enable server-side hinting to provide the front-end with information about the directory structure, which significantly speed up development loading and gets rid of 404 errors.
+* Multiple I/O calls - In the development environment, the browser makes multiple I/O calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. While this is usually acceptable in a server environment, on the browser this can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's. To mitigate this, you can enable [server-side hinting](#hinting) to provide the front-end with information about the directory structure, which significantly speeds up development loading and gets rid of 404 errors, but doesn't completely get rid of I/O.
 
 * Delayed execution - because the CommonJS style `require` expects an immediate return value instead of a callback, every dependency (and by extension, each dependency's depdendency on down the chain) must be available as soon as any code in one sandbox is executed. In practice this means slower start times, as every single dependency, regardless of how soon it will be needed, must be loaded. This is mitigated in the deployment version where all the scripts are bundled, but is still an issue.
+
+* Circular Dependencies in node_modules - The current way that circular dependencies are detected in the source code is flawed when working with using modules required by name. This issue is being actively worked.
 
 License
 -------

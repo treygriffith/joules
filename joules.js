@@ -132,6 +132,18 @@ var globalWrap = "(function() {\n" +
 "			var err = new Error(\"Cannot find module '\" + name + \"'\");\n" +
 "			err.code = 'MODULE_NOT_FOUND';\n" +
 "			throw err;\n" +
+"		},\n" +
+"		// shim for process\n" +
+"		// platform is linux because all we use it for is determining file hierarchy, which is posix\n" +
+"		process = {\n" +
+"			// this should probably be the directory of the entrypoint file, not the window\n" +
+"			cwd: function() {\n" +
+"				var href = window.location.pathname;\n" +
+"				href = href.split('/');\n" +
+"				href.pop();\n" +
+"				return href.join('/') || '/';\n" +
+"			},\n" +
+"			platform: 'linux'\n" +
 "		};\n" +
 "\n" +
 "	function Module(id, parent, dependencies) {\n" +

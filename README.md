@@ -7,11 +7,11 @@ Installation
 
 Using NPM, pass the `-g` flag to make the `joules` command available on the command line
 
-	```bash
+```bash
 	$ npm install joules -g
-	```
+```
 
-Install it in your project's repository to make deployment builds and hinting available on the command line
+Install it in your project's repository to make [deployment builds](#programmatic-build) and [hinting](#hinting) available on the command line
 
 ```bash
 	$ npm install joules

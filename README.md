@@ -96,9 +96,9 @@ Joules supports module loading using the [same lookup pattern as Node](http://no
 ### Deployment
 To serve your modules as a compiled bundle that is optimized for deployment, you can use the command line builder, or the programmatic version of the same tool for use in a larger build process.
 
-To build a script, you simple have to define a target. The target can be an HTML file, which will be scanned for inline javascript, or the main entrypoint to your program, like `main.js` in the previous example.
+To build a script, you simply have to define a target. The target can be an HTML file, which will be scanned for inline javascript, or the main entrypoint to your program, like `main.js` in the previous example.
 
-##### Command Line
+#### Command Line
 
 ```bash
 
@@ -172,23 +172,25 @@ This implementation does both, using (1) for deployment builds, and (2) for deve
 Features
 --------
 
-* CommonJS/Node.js style module loading (var module = require('module')) without requiring a build step.
+* CommonJS/Node.js style module loading (`var module = require('module')`) without requiring a build step.
+
+* A Node.js-like execution environment - makes for easy transfer of modules
 
 * Supports [`node_modules` modules](http://nodejs.org/api/modules.html#modules_loading_from_node_modules_folders) as well as [files as modules](http://nodejs.org/api/modules.html#modules_file_modules) and [directories as modules](http://nodejs.org/api/modules.html#modules_folders_as_modules)
+
+* Ability to use NPM and other Node.js package management tools to manage packages for the front-end, with occasional minor adjustments for browser vs. server behavior
 
 * Inline scripting supported via `require.ready` callback similar to the `$.ready` jQuery callback
 
 * Scripts are fetched asynchronously in development, and are pre-compiled in deployment, but are always guaranteed to be available prior to script execution
 
-* No global namespace pollution (all globals must be explicitly attached to the `window` object)
+* No global namespace pollution (all globals must be explicitly attached to the `window` object, or the semi-global `global` object)
 
 * Supports a `data-main` attribute as the script's entry point (like RequireJS)
 
 * Compile-time dependency determination - no need to state them up front
 
 * [Circular dependency support](http://nodejs.org/api/modules.html#modules_cycles)
-
-* A Node.js-like execution environment - makes for easy transfer of modules
 
 * Build script is nearly identical to development script, leading to fewer differences between dev and deployment
 
@@ -198,7 +200,7 @@ There are several issues with Joules that do not come up or are better supported
 
 * file:// usage - due to how many browser vendors implement Cross-domain whitelisting, you cannot xhr a file:// location, even if it's from a file:// location. That means that when using Joules in development, you have to spin up a server. Since most development work happens this way anyway, this is viewed as an acceptable sacrifice, but it is a limitation.
 
-* Cross-domain/CDN usage - when using Joules in development, any CDN or other domain you use (e.g. your production domain) has to include the appropriate CORS header to allow your local development environment access. (https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS#Access-Control-Allow-Origin). This is one-time setup, but might be a difference maker depending on your CDN.
+* Cross-domain/CDN usage - when using Joules in development, any CDN or other domain you use (e.g. your production domain) has to include the appropriate [CORS header](https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS#Access-Control-Allow-Origin) to allow your local development environment access. This is one-time setup, but might be a difference maker depending on your CDN.
 
 * Debugging - using Joules in both development and deployment transforms your scripts in such a way that errors will not be thrown in your source file. For simple debugging it is serviceable, but for more complex web apps a better solution is needed. Some browsers are beginning to implement Source maps, which Joules will support (eventually) which should help with debugging, but it is not yet widely supported.
 
@@ -206,6 +208,6 @@ There are several issues with Joules that do not come up or are better supported
 
 * Variable `require`s - Both the development and deployment environments rely on RegExp parsing to determine dependencies via `require` calls. Therefore any call to `require` with a variable value (or any value that is not a string literal) will at best not return a module, and at worst choke the parser. Generally this is an undesirable design in any case, and can be better replaced with variability within in the `require`d module.
 
-* Multiple I/O calls - In the development environment, the browser makes multiple I/O calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. While this is usually acceptable in a server environment, on the browser this can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's.
+* Multiple I/O calls - In the development environment, the browser makes multiple I/O calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. While this is usually acceptable in a server environment, on the browser this can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's. To mitigate this, you can enable server-side hinting to provide the front-end with information about the directory structure, which significantly speed up development loading and gets rid of 404 errors.
 
-* Delayed execution - because the CommonJS style `require` expects an immediate return value instead of a callback, every dependency (and by extension, each dependency's depdendency on down the chain) must be available as soon as any code in one sandbox is executed. In practice this means slower start times, as every single dependency, regardless of how soon it will be needed, must be loaded. This is mitigated in the deployment version, but is still an issue.
+* Delayed execution - because the CommonJS style `require` expects an immediate return value instead of a callback, every dependency (and by extension, each dependency's depdendency on down the chain) must be available as soon as any code in one sandbox is executed. In practice this means slower start times, as every single dependency, regardless of how soon it will be needed, must be loaded. This is mitigated in the deployment version where all the scripts are bundled, but is still an issue.

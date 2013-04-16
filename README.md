@@ -158,7 +158,7 @@ For using Joules as part of a larger build process, require the Joules module:
 
 Once you've built your bundled file, you can include it like any regular script on the page. To borrow examples from the deployment section:
 
-* Targeting an external script, `main.js`:
+Targeting an external script, `main.js`:
 
 ```html
 	<html>
@@ -172,7 +172,7 @@ Once you've built your bundled file, you can include it like any regular script 
 	</html>
 ```
 
-* Targeting the inline script for this page, `index.html`
+Targeting the inline script for this page, `index.html`:
 
 ```html
 	<html>

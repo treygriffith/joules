@@ -211,3 +211,8 @@ There are several issues with Joules that do not come up or are better supported
 * Multiple I/O calls - In the development environment, the browser makes multiple I/O calls in the form of HEAD requests in an attempt to find modules in a way that is consistent with Node.js's search pattern. While this is usually acceptable in a server environment, on the browser this can lead to performance slowdowns when there are a large number of modules, and can clutter the debugger with pointless 404's. To mitigate this, you can enable server-side hinting to provide the front-end with information about the directory structure, which significantly speed up development loading and gets rid of 404 errors.
 
 * Delayed execution - because the CommonJS style `require` expects an immediate return value instead of a callback, every dependency (and by extension, each dependency's depdendency on down the chain) must be available as soon as any code in one sandbox is executed. In practice this means slower start times, as every single dependency, regardless of how soon it will be needed, must be loaded. This is mitigated in the deployment version where all the scripts are bundled, but is still an issue.
+
+License
+-------
+
+MIT - [View Full License](LICENSE)

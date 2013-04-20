@@ -838,6 +838,7 @@ var loadModule = function(location, name, callback, raw, parent) {
 			var module = Object.create(loadedModules[resolved]);
 			module.name = name;
 			module.parent = parent;
+			module.dependenciesFound = [];
 			callback(null,  module);
 			return;
 		}

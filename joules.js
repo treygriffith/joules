@@ -238,6 +238,12 @@ if(typeof browserBuild === 'undefined') {
 // cache of written dependencies
 var writeCache = {};
 
+// filter out single dollar signs from replacement text, and replace them with double dollar signs
+// this will be rendered as a single due to the way that String#replace works
+function dollarFilter(str) {
+	return str.split('$').join('$$');
+}
+
 
 // Need a way to make all dependencies of a top level script available on window.require;
 // Top level script therefore does not have a source to be wrapped
@@ -284,24 +290,22 @@ Script.prototype.write = function(cache, root) {
 
 Script.prototype.invoke = function() {
 	return invoke
-			.replace(/{{name}}/g, this.name);
+			.replace(/{{name}}/g, dollarFilter(this.name));
 };
-
-// For some reason, in the foam-client script all the dollar signs are being overwritten with the bottom portion of the cacheWrap
-// actually, sometimes it's the top portion...
 
 Script.prototype.addToCache = function(cache) {
 	var wrapped;
 	cache = cache || this.cache;
 
 	wrapped = cacheWrap
-				.replace(/{{id}}/g, this.id)
-				.replace(/{{source}}/g, this.source);
+				.replace(/{{id}}/g, dollarFilter(this.id))
+				.replace(/{{source}}/g, dollarFilter(this.source));
 
 	if(!!~cache.indexOf(wrapped)) {
 		// don't add the same script twice
 		return;
 	}
+
 	cache.push(wrapped);
 
 	return wrapped;
@@ -309,21 +313,21 @@ Script.prototype.addToCache = function(cache) {
 
 Script.prototype.wrap = function() {
 	return dependenciesWrap
-			.replace(/{{id}}/g, this.id)
-			.replace(/{{name}}/g, this.name)
-			.replace(/{{dependencies}}/g, this.dependenciesSource);
+			.replace(/{{id}}/g, dollarFilter(this.id))
+			.replace(/{{name}}/g, dollarFilter(this.name))
+			.replace(/{{dependencies}}/g, dollarFilter(this.dependenciesSource));
 };
 
 Script.prototype.rootWrap = function() {
 	return rootWrap
-			.replace(/{{id}}/g, this.id)
-			.replace(/{{name}}/g, this.name);
+			.replace(/{{id}}/g, dollarFilter(this.id))
+			.replace(/{{name}}/g, dollarFilter(this.name));
 };
 
 Script.prototype.globalWrap = function() {
 	return globalWrap
-			.replace(/{{dependencies}}/g, this.dependenciesSource)
-			.replace(/{{cache}}/g, this.cache);
+			.replace(/{{dependencies}}/g, dollarFilter(this.dependenciesSource))
+			.replace(/{{cache}}/g, dollarFilter(this.cache.join(',')));
 };
 
 if(typeof browserBuild === 'undefined') {

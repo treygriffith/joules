@@ -1009,7 +1009,15 @@ function resolveAsDir(dir, callback) {
 					if(Array.isArray(pkg.main)) {
 						main = main[0];
 					}
-					callback(null, resolve(dir, main));
+
+					exists(resolve(dir, main), function(file_exists) {
+						if(file_exists) {
+							callback(null, resolve(dir, main));
+							return;
+						}
+
+						resolveVariations(resolve(dir, main), callback);
+					});
 					return;
 				}
 

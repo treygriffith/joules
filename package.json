@@ -1,6 +1,6 @@
 {
 	"name": "joules",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"dependencies": {
 		"optimist": "0.3.5"
 	},

@@ -988,7 +988,8 @@ function resolveAsDir(dir, callback) {
 	exists(resolve(dir, "package.json"), function(pkg_exists) {
 		if(pkg_exists) {
 			readFile(resolve(dir, "package.json"), "utf8", function(err, raw) {
-				var pkg;
+				var pkg,
+					main;
 
 				if(err) {
 					callback(err);
@@ -1003,7 +1004,12 @@ function resolveAsDir(dir, callback) {
 				}
 
 				if(pkg && pkg.main) {
-					callback(null, resolve(dir, pkg.main));
+					main = pkg.main;
+
+					if(Array.isArray(pkg.main)) {
+						main = main[0];
+					}
+					callback(null, resolve(dir, main));
 					return;
 				}
 

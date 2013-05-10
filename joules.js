@@ -330,6 +330,10 @@ Script.prototype.globalWrap = function() {
 			.replace(/{{cache}}/g, dollarFilter(this.cache.join(',')));
 };
 
+Script.prototype.clone = function() {
+	return new Script(this.parent, this.dependencies, this.id, this.name, this.source);
+};
+
 if(typeof browserBuild === 'undefined') {
 	module.exports = Script;
 }var manifest_filename = "index.json",
@@ -651,24 +655,39 @@ function isFile(name) {
 function fileExt(name) {
 	return name.slice(name.lastIndexOf('.'));
 }
-
 // Load up a hints file
 var hints;
+var hints_locations = paths('__hints.json', resolve(''));
 
-exists(resolve('__hints.json'), function(file_exists) {
-	if(file_exists) {
-		readFile(resolve('__hints.json'), function(err, contents) {
-			if(err) throw err;
 
-			try {
-				hints = JSON.parse(contents);
-			} catch(e) {
-				console.log("hints file found, but not valid JSON");
-			}
-
-		});
+var hints_loop = function(i) {
+	if(!hints_locations[i]) {
+		hints = false;
+		return;
 	}
-});
+	if(hints) {
+		return;
+	}
+	exists(hints_locations[i], function(file_exists) {
+		if(file_exists) {
+			readFile(hints_locations[i], function(err, contents) {
+				if(err) throw err;
+
+				try {
+					hints = JSON.parse(contents);
+				} catch(e) {
+					console.warn("hints file found, but not valid JSON");
+				}
+
+			});
+		} else {
+			i++;
+			hints_loop(i);
+		}
+	});
+};
+
+hints_loop(0);
 
 function stat(file, callback) {
 	if(hints) {
@@ -709,15 +728,19 @@ var core = {};
 // given a path, create an array of node_module paths for it
 // borrowed from substack/resolve
 function nodeModulesPaths (start) {
+    return paths('node_modules', start);
+}
+
+function paths(dirName, start) {
     var splitRe = process.platform === 'win32' ? /[\/\\]/ : /\/+/;
     var parts = start.split(splitRe);
 
     var dirs = [];
     for (var i = parts.length - 1; i >= 0; i--) {
-        if (parts[i] === 'node_modules') continue;
+        if (parts[i] === dirName) continue;
         var dir = join(
             join.apply(this, parts.slice(0, i + 1)),
-            'node_modules'
+            dirName
         );
         if (!parts[0].match(/([A-Za-z]:)/)) {
             dir = '/' + dir;
@@ -839,7 +862,7 @@ var loadModule = function(location, name, callback, raw, parent) {
 		}
 
 		if(loadedModules[resolved]) {
-			var module = Object.create(loadedModules[resolved]);
+			var module = loadedModules[resolved].clone();
 			module.name = name;
 			module.parent = parent;
 			module.dependenciesFound = [];

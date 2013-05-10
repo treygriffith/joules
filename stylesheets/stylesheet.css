@@ -275,6 +275,7 @@ Full-Width Styles
   max-width: 640px;
   padding: 20px 10px;
   margin: 0 auto;
+  background: url('../images/james_prescott_joule_header.png') right 70% no-repeat;
 }
 
 #forkme_banner {

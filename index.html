@@ -132,7 +132,7 @@
 
 <p>Joules loads modules using the <a href="http://nodejs.org/api/modules.html#modules_modules">same lookup pattern as Node</a>. In addition, it also looks for HTML files (as index files, and also as exact filenames) that it can scan for inline javascript. The HTML behavior is recommended only when targeting as the base module, not as a way to reference dependencies.</p>
 
-<h4>Hinting</h4>
+<h4><a id="hinting">Hinting</a></h4>
 
 <p>Due to the sometimes lengthy lookup process for modules, using HTTP requests can be burdensome, even in a development environment. To help alleviate the problem, Joules provides a way to generate a hinting file for your public directory to reduce HTTP requests.</p>
 
@@ -165,7 +165,7 @@ main.joules.js written.
 bundle.js written.
 </pre></div>
 
-<h4>Programmatic Build</h4>
+<h4><a id="#programmatic-build">Programmatic Build</a></h4>
 
 <p>For using Joules as part of a larger build process, require the Joules module:</p>
 
@@ -270,7 +270,7 @@ bundle.js written.
 <li><p>Circular Dependencies in node_modules - The current way that circular dependencies are detected in the source code is flawed when working with using modules required by name. This issue is being actively worked.</p></li>
 </ul><h2>License</h2>
 
-<p>MIT - <a href="LICENSE">View Full License</a></p>
+<p>MIT - <a href="https://github.com/treygriffith/joules/LICENSE">View Full License</a></p>
       </section>
     </div>
 

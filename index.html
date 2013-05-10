@@ -33,8 +33,11 @@
       <section id="main_content" class="inner">
         <h1>Joules</h1>
 
-<p>Joules is a library that provides Node.js-style module loading on the browser. Unlike other similar libraries, it doesn't have a build step in the development environment, allowing for rapid iteration while still providing a build step for deployment to deliver the best experience to the end user.</p>
+<p>Joules is a library that provides Node.js-style module loading* on the browser. Unlike other similar libraries, it doesn't have a build step in the development environment, allowing for rapid iteration. It also builds into a bundle for faster loading in a deployment environment.</p>
+
 <p>Check out a <a href="demo">live demo</a> using Joules.</p>
+
+<p class="footnote">* Node.js is the most popular implementation of CommonJS module loading, but it has a few differences from the CommonJS spec, such as exporting a single function with <code>module.exports = myFunction</code> and looking for <code>node_modules</code>. Joules follows Node.js's conventions in those cases instead of strictly following the CommonJS spec.</p>
 
 <h2>Installation</h2>
 

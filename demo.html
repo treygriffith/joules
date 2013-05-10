@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style type="text/css">
+			#code-editor {
+				min-height:600px;
+				height:100%;
+				width:49%;
+				float:left;
+			}
+			#body {
+				min-height:600px;
+				height:100%;
+				width:50%;
+				border:none;
+				float:left;
+			}
+			#available-files, #hide-available {
+				display:none;
+			}
+		</style>
+	</head>
+
+	<body>
+<a href="#view-available" id="view-available">View Available Files</a>
+<a href="#hide-available" id="hide-available">Hide Available Files</a><br>
+<div id="available-files"></div>
+
+<textarea id="code-editor">
+var $ = require('jquery'),
+	render = require('./render'),
+	addStyle = require('./addStyle'),
+	title = "Joules Demo";
+
+addStyle("/css/default.css");
+addStyle("/css/markdown.css");
+
+render.mustache('layout', function(err, layout) {
+	if(err) throw err;
+	var layout$ = $(layout);
+	layout$.prependTo(document.body);
+
+
+	render.mustache('title', {title:title}, function(err, title) {
+		if(err) throw err;
+		layout$.prepend(title);
+	});
+
+	render.mustache('description', {
+
+		name: "Joules",
+		adjective: "beautiful",
+		descriptor1: "minimal",
+		descriptor2: "elegant",
+		descriptor3: "easy-to-use",
+		link: "http://github.com/treygriffith/joules"
+
+	}, function(err, description) {
+
+		if(err) throw err;
+		layout$.append(description);
+
+	});
+
+	render.markdown('/README', function(err, readme) {
+		if(err) throw err;
+		layout$.append(readme);
+	});
+
+});
+</textarea>
+
+		<iframe id="body" src="js/iframe.html"></iframe>
+
+		<script src="js/joules.js" data-main="js/app.js"></script>
+
+	</body>
+
+</html>

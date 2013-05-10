@@ -14,12 +14,16 @@ function renderMarkdown(name, callback) {
 			return;
 		}
 
-		// remove github-flavored code blocks
-		contents = contents.replace(/```[\S]*/g, '');
-
-
-		callback(null, "<div class='markdown'>" + markdown(contents) + "</div>");
+		renderMarkdown.raw(contents, callback);
 	});
 }
+
+renderMarkdown.raw = function(raw, callback) {
+	// remove github-flavored code blocks
+	var contents = raw.replace(/```[\S]*/g, '');
+
+
+	callback(null, "<div class='markdown'>" + markdown(contents) + "</div>");
+};
 
 module.exports = renderMarkdown;

@@ -30,6 +30,7 @@
 var $ = require('jquery'),
 	render = require('./render'),
 	addStyle = require('./addStyle'),
+	fs = require('fs-browser'),
 	title = "Joules Demo";
 
 addStyle("/css/default.css");
@@ -62,11 +63,14 @@ render.mustache('layout', function(err, layout) {
 
 	});
 
-	render.markdown('/README', function(err, readme) {
-		if(err) throw err;
-		layout$.append(readme);
-	});
+	fs.readFile('/params.json', function(err, params) {
+		var readme = JSON.parse(params).body;
 
+		render.markdown.raw(readme, function(err, readme) {
+			if(err) throw err;
+			layout$.append(readme);
+		});
+	})
 });
 </textarea>
 

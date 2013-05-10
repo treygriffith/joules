@@ -21,6 +21,7 @@ function renderMarkdown(name, callback) {
 renderMarkdown.raw = function(raw, callback) {
 	// remove github-flavored code blocks
 	var contents = raw.replace(/```[\S]*/g, '');
+	contents = contents.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 
 	callback(null, "<div class='markdown'>" + markdown(contents) + "</div>");

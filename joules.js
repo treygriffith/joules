@@ -439,7 +439,7 @@ if(typeof browserBuild === 'undefined') {
 
 	// shim for process
 	// platform is linux because all we use it for is determining file hierarchy, which is posix
-	process = process || {};
+	process = typeof process === 'undefined' ? {} : process;
 	process.cwd = function() {
 		var href = window.location.pathname;
 		href = href.split('/');

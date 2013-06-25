@@ -439,15 +439,14 @@ if(typeof browserBuild === 'undefined') {
 
 	// shim for process
 	// platform is linux because all we use it for is determining file hierarchy, which is posix
-	process = {
-		cwd: function() {
-			var href = window.location.pathname;
-			href = href.split('/');
-			href.pop();
-			return href.join('/') || '/';
-		},
-		platform: 'linux'
+	process = process || {};
+	process.cwd = function() {
+		var href = window.location.pathname;
+		href = href.split('/');
+		href.pop();
+		return href.join('/') || '/';
 	};
+	process.platform = 'linux';
 
 	// xhr
 	var sendRequest = function(url, method, callback) {
@@ -657,37 +656,40 @@ function fileExt(name) {
 }
 // Load up a hints file
 var hints;
-var hints_locations = paths('__hints.json', resolve(''));
 
+if(typeof browserBuild !== 'undefined') {
 
-var hints_loop = function(i) {
-	if(!hints_locations[i]) {
-		hints = false;
-		return;
-	}
-	if(hints) {
-		return;
-	}
-	exists(hints_locations[i], function(file_exists) {
-		if(file_exists) {
-			readFile(hints_locations[i], function(err, contents) {
-				if(err) throw err;
+	var hints_locations = paths('__hints.json', resolve(''));
 
-				try {
-					hints = JSON.parse(contents);
-				} catch(e) {
-					console.warn("hints file found, but not valid JSON");
-				}
-
-			});
-		} else {
-			i++;
-			hints_loop(i);
+	var hints_loop = function(i) {
+		if(!hints_locations[i]) {
+			hints = false;
+			return;
 		}
-	});
-};
+		if(hints) {
+			return;
+		}
+		exists(hints_locations[i], function(file_exists) {
+			if(file_exists) {
+				readFile(hints_locations[i], function(err, contents) {
+					if(err) throw err;
 
-hints_loop(0);
+					try {
+						hints = JSON.parse(contents);
+					} catch(e) {
+						console.warn("hints file found, but not valid JSON");
+					}
+
+				});
+			} else {
+				i++;
+				hints_loop(i);
+			}
+		});
+	};
+
+	hints_loop(0);
+}
 
 function stat(file, callback) {
 	if(hints) {
@@ -704,7 +706,7 @@ function stat(file, callback) {
 	_stat(file, callback);
 }
 
-stat.hasIsDirectory = (fs && fs.Stats && typeof fs.Stats.isDirectory === 'function') || !!hints;
+stat.hasIsDirectory = !!hints || (fs && fs.Stats && fs.Stats.prototype && typeof fs.Stats.prototype.isDirectory === 'function');
 
 function exists(file, callback) {
 	if(hints) {
@@ -850,6 +852,7 @@ function findDependencies(string, isHtml) {
 // raw flag signifies that location is actually the raw contents of the entrypoint file
 var loadModule = function(location, name, callback, raw, parent) {
 
+
 	if(raw) {
 		loadJs(name, './', callback, parent)(null, location);
 		return;
@@ -911,6 +914,7 @@ function resolveModule(location, name, callback) {
 		// check for exact filename or directory name match
 		exists(resolved, function(file_exists) {
 			if(file_exists) {
+
 				stat(resolved, function(err, stats) {
 					if(err) {
 						callback(err);
@@ -920,7 +924,13 @@ function resolveModule(location, name, callback) {
 					if(stats.isDirectory()) {
 						resolveAsDir(resolved, function(err, resolved_dir) {
 							if(moduleNotFound.is(err)) {
-								callback(moduleNotFound(name));
+								resolveVariations(resolved, function(err, resolved_file) {
+									if(moduleNotFound.is(err)) {
+										callback(moduleNotFound(name));
+										return;
+									}
+									callback(err, resolved_file);
+								});
 								return;
 							}
 							callback(err, resolved_dir);
@@ -957,6 +967,7 @@ function resolveModule(location, name, callback) {
 						callback(err, resolved_dir);
 					});
 				} else {
+
 					// check for file variations since this is not a directory
 					resolveVariations(resolved, function(err, resolved_file) {
 						if(moduleNotFound.is(err)) {

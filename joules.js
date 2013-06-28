@@ -114,8 +114,11 @@ var dependenciesWrap = "(function(modules) {\n" +
 "\n" +
 "	{{dependencies}}\n" +
 "\n" +
-"	modules['{{name}}'] = dependency_cache['{{id}}'](cache, dependencies);\n" +
-"	modules['{{name}}'].resolved = '{{id}}';\n" +
+"	var name = '{{name}}';\n" +
+"	var id = '{{id}}';\n" +
+"\n" +
+"	modules[name] = dependency_cache[id](cache, dependencies);\n" +
+"	modules[name].resolved = id;\n" +
 "\n" +
 "})(dependencies);\n" +
 "";

@@ -1,8 +1,9 @@
 {
 	"name": "joules",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"dependencies": {
-		"optimist": "0.3.5"
+		"optimist": "0.3.5",
+		"filequeue": "0.5.x"
 	},
 	"main": "./lib/build/deployment/index.js",
 	"bin": {

@@ -1,60 +1,4 @@
-(function() {// load the data-main script
-
-var loadMain = function(main) {
-	var location = './';
-	if(main) {
-		if(typeof loadModule !== 'function') {
-			window.setTimeout(function() {
-				loadMain(main);
-			}, 10);
-			return;
-		}
-
-		if(main[0] !== '.' && main[0] !== '/') {
-			main = './'+main;
-		}
-		if(main[0] === '/') {
-			location = '/';
-		}
-		loadModule(location, main, writeModule);
-	}
-};
-
-var writeModule = function(err, module) {
-	if(err) throw err;
-
-	var script = document.createElement('script');
-	script.type = 'text/javascript';
-	script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})(); \n\n //@ sourceURL='+module.id+'.joules';
-	try {
-		window.document.getElementsByTagName('head')[0].appendChild(script);
-	} catch(e) {
-		console.log("Couldn't append script:");
-		console.log(script.innerText);
-		throw e;
-	}
-};
-
-var scripts = window.document.getElementsByTagName("script");
-var script = scripts[scripts.length - 1];
-loadMain(script.getAttribute('data-main'));
-
-
-window.require = function() {
-	throw new Error("Can't call require outside of require.ready");
-};
-
-window.require.fire = function(evt) {
-};
-
-window.require.ready = function(fn) {
-
-	var whole = fn.toString();
-	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
-
-	loadModule(body, Math.round(Math.random()*10000).toString(), writeModule, true);
-};
-var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
+(function() {var cacheWrap = "'{{id}}' : function(cache, dependencies) {\n" +
 "	return function(parent) {\n" +
 "\n" +
 "		var id = '{{id}}';\n" +
@@ -392,10 +336,10 @@ if(typeof browserBuild === 'undefined') {
 	loadedModules = {};
 
 if(typeof browserBuild === 'undefined') {
-	fs = require('fs');
-	readFile = fs.readFile;
-	_exists = fs.exists;
-	_stat = fs.stat;
+	fs = new require('filequeue')();
+	readFile = fs.readFile.bind(fs);
+	_exists = fs.exists.bind(fs);
+	_stat = fs.stat.bind(fs);
 	resolve = require('path').resolve;
 	join = require('path').join;
 	sep = require('path').sep;
@@ -681,6 +625,7 @@ if(typeof browserBuild !== 'undefined') {
 						hints = JSON.parse(contents);
 					} catch(e) {
 						console.warn("hints file found, but not valid JSON");
+						hints = false;
 					}
 
 				});
@@ -709,7 +654,9 @@ function stat(file, callback) {
 	_stat(file, callback);
 }
 
-stat.hasIsDirectory = !!hints || (fs && fs.Stats && fs.Stats.prototype && typeof fs.Stats.prototype.isDirectory === 'function');
+stat.hasIsDirectory = function () {
+	return !!hints || (fs && fs.Stats && fs.Stats.prototype && typeof fs.Stats.prototype.isDirectory === 'function');
+}
 
 function exists(file, callback) {
 	if(hints) {
@@ -1121,4 +1068,60 @@ function resolveVariations(name, callback) {
 
 if(typeof browserBuild === 'undefined') {
 	module.exports = loadModule;
-}})();
+}// load the data-main script
+
+var loadMain = function(main) {
+	var location = './';
+	if(main) {
+		if(typeof loadModule !== 'function' || hints === undefined) {
+			window.setTimeout(function() {
+				loadMain(main);
+			}, 10);
+			return;
+		}
+
+		if(main[0] !== '.' && main[0] !== '/') {
+			main = './'+main;
+		}
+		if(main[0] === '/') {
+			location = '/';
+		}
+		loadModule(location, main, writeModule);
+	}
+};
+
+var writeModule = function(err, module) {
+	if(err) throw err;
+
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.text = '(function() { var require = {ready:window.require.ready, fire:window.require.fire};\n' + module.write(null, true) + module.invoke() + '})(); \n\n //@ sourceURL='+module.id+'.joules';
+	try {
+		window.document.getElementsByTagName('head')[0].appendChild(script);
+	} catch(e) {
+		console.log("Couldn't append script:");
+		console.log(script.innerText);
+		throw e;
+	}
+};
+
+var scripts = window.document.getElementsByTagName("script");
+var script = scripts[scripts.length - 1];
+loadMain(script.getAttribute('data-main'));
+
+
+window.require = function() {
+	throw new Error("Can't call require outside of require.ready");
+};
+
+window.require.fire = function(evt) {
+};
+
+window.require.ready = function(fn) {
+
+	var whole = fn.toString();
+	var body = whole.substring(whole.indexOf('{')+1, whole.lastIndexOf('}'));
+
+	loadModule(body, Math.round(Math.random()*10000).toString(), writeModule, true);
+};
+})();
